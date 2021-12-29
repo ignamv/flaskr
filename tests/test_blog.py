@@ -87,3 +87,8 @@ def test_delete(client, auth):
     assert response.headers['Location'] == 'http://localhost/'
     assert b'test title' not in client.get('/').data
 
+
+def test_singlepost(client):
+    response = client.get('/2').data
+    assert b'test title' not in response
+    assert b'test2' in response

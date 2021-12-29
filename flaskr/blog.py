@@ -41,7 +41,7 @@ def create():
     return render_template('blog/new.html')
 
 
-@bp.route('/<int:post_id>/')
+@bp.route('/<int:post_id>')
 def post(post_id):
     post = get_db().execute('SELECT * FROM post WHERE id == ?', (post_id,)
                             ).fetchone()
