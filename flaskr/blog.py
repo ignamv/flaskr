@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, g, redirect, render_template, request, session, url_for, abort
 )
 from .db import get_db
 from .auth import login_required
@@ -16,8 +16,8 @@ def index():
     return render_template('blog/posts.html', posts=posts)
 
 
-@login_required
 @bp.route('/create', methods=('GET', 'POST'))
+@login_required
 def create():
     if request.method == 'POST':
         error = None
@@ -61,11 +61,12 @@ def get_post(id, check_author=True):
     ).fetchone()
     if post is None:
         abort(404, f'Post id {id} does not exist')
-    if check_author and post['author_id'] != g.user['id']:
+    if check_author and ('user' not in g or g.user is None or post['author_id'] != g.user['id']):
         abort(403)
     return post
 
 @bp.route('/<int:post_id>/update', methods=('GET', 'POST'))
+@login_required
 def update(post_id):
     post = get_post(post_id)
     print(dict(post))
@@ -91,6 +92,7 @@ def update(post_id):
 
 
 @bp.route('/<int:post_id>/delete', methods=('POST',))
+@login_required
 def delete(post_id):
     get_post(post_id)
     db = get_db()
