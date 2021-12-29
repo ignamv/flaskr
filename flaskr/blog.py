@@ -88,7 +88,6 @@ def get_post(id, check_author=True):
 @login_required
 def update(post_id):
     post = get_post(post_id)
-    print(dict(post))
     if request.method == "POST":
         error = None
         title = request.form["title"]
