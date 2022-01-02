@@ -83,6 +83,13 @@ def load_logged_in_user():
         )
 
 
+def get_user_id():
+    if g.user is None:
+        return -1
+    else:
+        return g.user["id"]
+
+
 # TODO: fix CSRF
 @bp.route("/logout")
 def logout():
