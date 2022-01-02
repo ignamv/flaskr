@@ -100,6 +100,13 @@ def test_like_missing_post(client, auth):
     assert client.post("/2000/like", data={"like": "1"}).status_code == 404
 
 
+def test_like_redirects(client, auth):
+    auth.login()
+    referer = "http://localhost/the_referer"
+    response = client.post("/1/like", data={"like": "1"}, headers={"Referer": referer})
+    assert response.headers["Location"] == referer
+
+
 def test_like(client, auth):
     def like(user, post, status):
         auth.login(user)
