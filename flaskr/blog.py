@@ -124,4 +124,4 @@ def like(post_id):
     else:
         db.execute('DELETE FROM like WHERE post_id == ? AND user_id == ?', (post_id, g.user['id']))
     db.commit()
-    return redirect(url_for('blog.post', post_id=post_id))
+    return redirect(request.headers.get('Referer', '/'))
