@@ -11,5 +11,9 @@
     {% endif %}
   </header>
   <p class="body">{{ post.body }}</p>
+  <form method="POST" action="{{ url_for('blog.like', post_id=post['id']) }}">
+    <input type="hidden" name="like" value="{{ '1' if not post['liked'] else '0' }}">
+    <input type="submit" value="{{ 'Like' if not post['liked'] else 'Unlike' }}">
+  </form>
 </article>
 
