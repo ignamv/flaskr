@@ -3,12 +3,15 @@ from flask import g, session
 from flaskr.db import get_db
 
 
+login_url = 'http://localhost/auth/login'
+
+
 def test_register(client, app):
     assert client.get('/auth/register').status_code == 200
     response = client.post(
         '/auth/register', data={'username': 'a', 'password': 'pw'}
     )
-    assert 'http://localhost/auth/login' == response.headers['Location']
+    assert login_url == response.headers['Location']
 
     with app.app_context():
         assert get_db().execute(
