@@ -13,3 +13,10 @@ INSERT INTO post (title, body, author_id, created)
 VALUES
   ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00'),
   ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00');
+
+INSERT INTO comment (body, post_id, author_id, created)
+VALUES
+  ('comment11', 1, 1, '1911-01-01 00:00:00'),
+  ('comment12', 1, 2, '1912-01-01 00:00:00'),
+  ('comment21', 2, 1, '1921-01-01 00:00:00'),
+  ('comment22', 2, 2, '1922-01-01 00:00:00');
