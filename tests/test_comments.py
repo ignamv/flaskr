@@ -153,3 +153,23 @@ def test_existing_comment(client, auth):
         client.get("/2/comments/3").data,
         flags=re.DOTALL,
     )
+
+
+@pytest.mark.parametrize(
+    "url",
+    (
+        "/{post_id}/comments/{comment_id}/delete",
+        "/{post_id}/comments/{comment_id}/update",
+    ),
+)
+def test_edit_comment(client, auth, url):
+    post_id = 2
+    comment_id = 3
+    change_url = url.format(post_id=post_id, comment_id=comment_id).encode("utf8")
+    comment_url = f"/{post_id}/comments/{comment_id}"
+    assert change_url not in client.get(comment_url).data
+    auth.login("test")
+    assert change_url in client.get(comment_url).data
+    auth.logout()
+    auth.login("other")
+    assert change_url not in client.get(comment_url).data
