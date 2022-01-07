@@ -163,6 +163,9 @@ def test_existing_comment(client, auth):
     ),
 )
 def test_edit_comment(client, auth, url):
+    # Make sure to test on a post made by another user
+    # to check that the user id is compared against the *comment* author and
+    # not the *post* author
     post_id = 2
     comment_id = 3
     change_url = url.format(post_id=post_id, comment_id=comment_id).encode("utf8")
