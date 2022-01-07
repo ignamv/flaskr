@@ -52,7 +52,7 @@ def new_comment(post_id):
 
 def get_comment(post_id, comment_id):
     ret = get_db().execute(
-        'SELECT comment.id, user.username, comment.created, comment.body'
+        'SELECT comment.id, user.username, comment.author_id, comment.created, comment.body'
         ' FROM comment JOIN user ON comment.author_id == user.id'
         ' WHERE post_id == ? AND comment.id == ?',
         (post_id, comment_id)
@@ -67,3 +67,13 @@ def comment(post_id, comment_id):
     post = get_post(post_id, check_author=False)
     comment = get_comment(post_id, comment_id)
     return render_template('blog/comments/comment.html', post=post, comment=comment)
+
+
+@route_later('/<int:post_id>/comments/<int:comment_id>/delete')
+def delete_comment(post_id, comment_id):
+    pass
+
+
+@route_later('/<int:post_id>/comments/<int:comment_id>/update')
+def update_comment(post_id, comment_id):
+    pass

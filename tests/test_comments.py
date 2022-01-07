@@ -81,3 +81,18 @@ def test_missing_comment(client, auth):
 def test_existing_comment(client, auth):
     assert re.search(b'test title.*1911-01-01 00:00.*comment11', client.get('/1/comments/1').data, flags=re.DOTALL)
     assert re.search(b'test2.*1921-01-01 00:00.*comment21', client.get('/2/comments/3').data, flags=re.DOTALL)
+
+
+@pytest.mark.parametrize('url',
+    ('/{post_id}/comments/{comment_id}/delete', '/{post_id}/comments/{comment_id}/update'))
+def test_edit_comment(client, auth, url):
+    post_id = 2
+    comment_id = 3
+    change_url = url.format(post_id=post_id, comment_id=comment_id).encode('utf8')
+    comment_url = f'/{post_id}/comments/{comment_id}'
+    assert change_url not in client.get(comment_url).data
+    auth.login('test')
+    assert change_url in client.get(comment_url).data
+    auth.logout()
+    auth.login('other')
+    assert change_url not in client.get(comment_url).data
