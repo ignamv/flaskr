@@ -135,4 +135,21 @@ def test_add_comment(client, auth, post_id):
         client.post(f"/{post_id}/comments/new", data={"body": body}).headers["Location"]
         == f"http://localhost/{post_id}"
     )
-    assert body in client.get(f"/{post_id}").data  # FIXME
+    assert body in client.get(f"/{post_id}").data
+
+
+def test_missing_comment(client, auth):
+    assert client.get("/2000/comments/1").status_code == 404
+
+
+def test_existing_comment(client, auth):
+    assert re.search(
+        b"test title.*1911-01-01 00:00.*comment11",
+        client.get("/1/comments/1").data,
+        flags=re.DOTALL,
+    )
+    assert re.search(
+        b"test2.*1921-01-01 00:00.*comment21",
+        client.get("/2/comments/3").data,
+        flags=re.DOTALL,
+    )

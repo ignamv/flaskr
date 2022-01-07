@@ -1,0 +1,11 @@
+    <article class="comment">
+      <header>
+        <div class="about">by {{ comment.username }} 
+          on {{ comment.created.isoformat(' ', 'minutes') }}
+          <a href="{{ url_for('blog.comment', post_id=post.id, comment_id=comment.id) }}">
+            Permalink
+          </a>
+        </div>
+      </header>
+      <p class="body">{{ comment.body }}</p>
+    </article>

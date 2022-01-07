@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Comment by {{comment.username}} on {{post.title}}{% endblock %}
+
+{% block content %}
+  <h1>Comment on {{post.title}}</h1>
+  <a href="{{ url_for('blog.post', post_id=post.id) }}">Return to post</a>
+  <hr>
+  {% include 'blog/comments/inner_comment.html' %}
+{% endblock %}
+
