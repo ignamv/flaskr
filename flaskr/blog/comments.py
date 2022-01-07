@@ -48,3 +48,22 @@ def new_comment(post_id):
             return redirect(url_for('blog.post', post_id=post_id))
     post = get_post(post_id, check_author=False)
     return render_template('blog/comments/new.html', post=post)
+
+
+def get_comment(post_id, comment_id):
+    ret = get_db().execute(
+        'SELECT comment.id, user.username, comment.created, comment.body'
+        ' FROM comment JOIN user ON comment.author_id == user.id'
+        ' WHERE post_id == ? AND comment.id == ?',
+        (post_id, comment_id)
+    ).fetchone()
+    if ret is None:
+        abort(404)
+    return ret
+
+
+@route_later('/<int:post_id>/comments/<int:comment_id>')
+def comment(post_id, comment_id):
+    post = get_post(post_id, check_author=False)
+    comment = get_comment(post_id, comment_id)
+    return render_template('blog/comments/comment.html', post=post, comment=comment)
