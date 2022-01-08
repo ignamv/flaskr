@@ -84,6 +84,7 @@ def delete_comment(post_id, comment_id):
 @route_later('/<int:post_id>/comments/<int:comment_id>/update', methods=('GET', 'POST'))
 @login_required
 def update_comment(post_id, comment_id):
+    post = get_post(post_id, check_author=False)
     comment = get_comment(post_id, comment_id)
     if request.method == 'POST':
         if comment['author_id'] != g.user['id']:
@@ -94,4 +95,4 @@ def update_comment(post_id, comment_id):
                    (body, comment_id))
         db.commit()
         return redirect(url_for('blog.post', post_id=post_id))
-    return ''
+    return render_template('blog/comments/new.html', post=post, comment=comment)
