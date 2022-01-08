@@ -144,7 +144,8 @@ def test_update_auth(client, auth):
     auth.login()
     assert client.post('/1/comments/2/update').status_code == 403
     assert client.get('/2/comments/3/update').status_code == 200
-    assert client.post('/1/comments/1/update', data={'body': 'UPDATED'}).status_code == 302
+    assert client.post('/1/comments/1/update', data={'body': 'UPDATED'}
+            ).headers['Location'] == 'http://localhost/1'
 
 
 def test_update_updates_and_what(client, auth):
