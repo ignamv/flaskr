@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-  <form method="POST">
+  <form method="POST" class="flexform">
     <label for="title">Title</label>
     <input name="title" id="title" value="{{ request.form.title or title }}" required>
     <label for="body">Body</label>
