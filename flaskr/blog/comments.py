@@ -78,11 +78,28 @@ def comment(post_id, comment_id):
     return render_template("blog/comments/comment.html", post=post, comment=comment)
 
 
-@route_later("/<int:post_id>/comments/<int:comment_id>/delete")
+@route_later("/<int:post_id>/comments/<int:comment_id>/delete", methods=("POST",))
+@login_required
 def delete_comment(post_id, comment_id):
-    pass
+    comment = get_comment(post_id, comment_id)
+    if comment["author_id"] != g.user["id"]:
+        abort(403)
+    db = get_db()
+    db.execute("DELETE FROM comment WHERE id == ?", (comment_id,))
+    db.commit()
+    return redirect(url_for("blog.post", post_id=post_id))
 
 
-@route_later("/<int:post_id>/comments/<int:comment_id>/update")
+@route_later("/<int:post_id>/comments/<int:comment_id>/update", methods=("GET", "POST"))
+@login_required
 def update_comment(post_id, comment_id):
-    pass
+    comment = get_comment(post_id, comment_id)
+    if request.method == "POST":
+        if comment["author_id"] != g.user["id"]:
+            abort(403)
+        body = request.form["body"]
+        db = get_db()
+        db.execute("UPDATE comment SET body = ? WHERE id = ?", (body, comment_id))
+        db.commit()
+        return redirect(url_for("blog.post", post_id=post_id))
+    return ""

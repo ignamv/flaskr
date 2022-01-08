@@ -162,7 +162,7 @@ def test_existing_comment(client, auth):
         "/{post_id}/comments/{comment_id}/update",
     ),
 )
-def test_edit_comment(client, auth, url):
+def test_edit_and_delete_comment_buttons(client, auth, url):
     # Make sure to test on a post made by another user
     # to check that the user id is compared against the *comment* author and
     # not the *post* author
@@ -176,3 +176,76 @@ def test_edit_comment(client, auth, url):
     auth.logout()
     auth.login("other")
     assert change_url not in client.get(comment_url).data
+
+
+def test_delete_missing_comment(client, auth):
+    auth.login()
+    assert client.post("/2000/comments/3000/delete").status_code == 404
+
+
+def test_delete_auth(client, auth):
+    assert client.post("/1/comments/1/delete").headers["Location"] == login_url
+    auth.login("other")
+    assert client.post("/1/comments/1/delete").status_code == 403
+    auth.logout()
+    auth.login()
+    assert client.post("/1/comments/2/delete").status_code == 403
+    assert client.post("/1/comments/1/delete").status_code == 302
+
+
+def test_delete_deletes_and_what(client, auth):
+    auth.login()
+    assert client.post("/1/comments/1/delete").status_code == 302
+    assert client.post("/1/comments/1/delete").status_code == 404
+    # Make sure nothing else was deleted
+    assert client.get("/1/comments/2").status_code == 200
+
+
+def test_delete_redirects(client, auth):
+    auth.login()
+    assert (
+        client.post("/1/comments/1/delete").headers["Location"] == "http://localhost/1"
+    )
+
+
+def test_update_missing_comment(client, auth):
+    auth.login()
+    assert client.post("/2000/comments/3000/update").status_code == 404
+    assert client.get("/2000/comments/3000/update").status_code == 404
+
+
+def test_update_auth(client, auth):
+    assert client.post("/1/comments/1/update").headers["Location"] == login_url
+    auth.login("other")
+    assert client.post("/1/comments/1/update").status_code == 403
+    auth.logout()
+    auth.login()
+    assert client.post("/1/comments/2/update").status_code == 403
+    assert (
+        client.post("/1/comments/1/update", data={"body": "UPDATED"}).status_code == 302
+    )
+
+
+def test_update_updates_and_what(client, auth):
+    auth.login()
+    assert (
+        client.post("/1/comments/1/update", data={"body": "UPDATED"}).status_code == 302
+    )
+    assert b"UPDATED" in client.get("/1/comments/1").data
+    # Make sure nothing else was updated
+    assert b"UPDATED" not in client.get("/1/comments/2").data
+
+
+def test_update_post_redirects(client, auth):
+    auth.login()
+    assert (
+        client.post("/1/comments/1/update", data={"body": "UPDATED"}).headers[
+            "Location"
+        ]
+        == "http://localhost/1"
+    )
+
+
+def test_update_get_renders(client, auth):
+    auth.login()
+    assert client.get("/1/comments/1/update").status_code == 200
