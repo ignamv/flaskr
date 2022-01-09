@@ -34,3 +34,16 @@ CREATE TABLE comment (
     FOREIGN KEY (author_id) REFERENCES user (id)
 );
 
+CREATE TABLE tag (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE post_tag (
+    post_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES post (id)
+    FOREIGN KEY (tag_id) REFERENCES tag (id)
+    PRIMARY KEY (post_id, tag_id)
+);
+
