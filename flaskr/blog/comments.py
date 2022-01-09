@@ -2,22 +2,7 @@ from flask import request, redirect, url_for, abort, flash, render_template, g
 from ..db import get_db
 from ..auth import login_required
 from .blogdb import get_post
-
-
-routes = []
-
-
-def route_later(*args, **kwargs):
-    def wrapper(func):
-        routes.append((func, args, kwargs))
-        return func
-
-    return wrapper
-
-
-def register_routes(blueprint):
-    for func, args, kwargs in routes:
-        blueprint.route(*args, **kwargs)(func)
+from .blueprint import bp
 
 
 def get_post_comments(post_id):
@@ -34,7 +19,7 @@ def get_post_comments(post_id):
     return comments
 
 
-@route_later("/<int:post_id>/comments/new", methods=("POST", "GET"))
+@bp.route("/<int:post_id>/comments/new", methods=("POST", "GET"))
 @login_required
 def new_comment(post_id):
     db = get_db()
@@ -71,14 +56,14 @@ def get_comment(post_id, comment_id):
     return ret
 
 
-@route_later("/<int:post_id>/comments/<int:comment_id>")
+@bp.route("/<int:post_id>/comments/<int:comment_id>")
 def comment(post_id, comment_id):
     post = get_post(post_id, check_author=False)
     comment = get_comment(post_id, comment_id)
     return render_template("blog/comments/comment.html", post=post, comment=comment)
 
 
-@route_later("/<int:post_id>/comments/<int:comment_id>/delete", methods=("POST",))
+@bp.route("/<int:post_id>/comments/<int:comment_id>/delete", methods=("POST",))
 @login_required
 def delete_comment(post_id, comment_id):
     comment = get_comment(post_id, comment_id)
@@ -90,7 +75,7 @@ def delete_comment(post_id, comment_id):
     return redirect(url_for("blog.post", post_id=post_id))
 
 
-@route_later("/<int:post_id>/comments/<int:comment_id>/update", methods=("GET", "POST"))
+@bp.route("/<int:post_id>/comments/<int:comment_id>/update", methods=("GET", "POST"))
 @login_required
 def update_comment(post_id, comment_id):
     post = get_post(post_id, check_author=False)

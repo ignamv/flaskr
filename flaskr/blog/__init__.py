@@ -1,21 +1,9 @@
-from flask import (
-    Blueprint,
-    flash,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-    abort,
-)
+from flask import flash, g, redirect, render_template, request, session, url_for, abort
 from ..db import get_db
 from ..auth import login_required, get_user_id
-from .comments import get_post_comments, register_routes
+from .comments import get_post_comments
+from .blueprint import bp
 from .blogdb import get_post
-
-bp = Blueprint("blog", __name__)
-register_routes(bp)
 
 
 @bp.route("/")
