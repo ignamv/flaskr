@@ -1,6 +1,7 @@
 from flask import g, abort
 
 from ..db import get_db
+from .tags import get_post_tags
 
 def get_post(id, check_author=True):
     db = get_db()
@@ -24,5 +25,6 @@ def get_post(id, check_author=True):
         ).fetchone() is not None
     post = dict(post)
     post['liked'] = liked
+    post['tags'] = get_post_tags(id)
     return post
 

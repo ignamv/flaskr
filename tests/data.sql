@@ -12,7 +12,9 @@ VALUES
 INSERT INTO post (title, body, author_id, created)
 VALUES
   ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00'),
-  ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00');
+  ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00'),
+  ('test3', 'test3', 1, '2020-01-01 00:00:00'),
+  ('test4', 'test4', 2, '2021-01-01 00:00:00');
 
 INSERT INTO comment (body, post_id, author_id, created)
 VALUES
@@ -20,3 +22,14 @@ VALUES
   ('comment12', 1, 2, '1912-01-01 00:00:00'),
   ('comment21', 2, 1, '1921-01-01 00:00:00'),
   ('comment22', 2, 2, '1922-01-01 00:00:00');
+
+
+INSERT INTO tag (name) VALUES ('tag1'), ('tag2');
+
+INSERT INTO post_tag (post_id, tag_id)
+VALUES
+  (2, 1),
+  (3, 2),
+  (4, 1),
+  (4,2);
+
