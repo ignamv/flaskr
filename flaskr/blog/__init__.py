@@ -20,6 +20,16 @@ def index():
     return render_template('blog/posts.html', posts=posts)
 
 
+def create_post(author_id, title, body):
+    db = get_db()
+    post_id = db.execute(
+        'INSERT INTO post (author_id, title, body) VALUES (?,?,?)',
+        (author_id, title, body)
+    ).lastrowid
+    db.commit()
+    return post_id
+
+
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
 def create():
@@ -32,12 +42,7 @@ def create():
         if not body:
             error = 'Missing body'
         if error is None:
-            db = get_db()
-            post_id = db.execute(
-                'INSERT INTO post (author_id, title, body) VALUES (?,?,?)',
-                (g.user['id'], title, body)
-            ).lastrowid
-            db.commit()
+            post_id = create_post(g.user['id'], title, body)
             return redirect(url_for('blog.post', post_id=post_id))
         else:
             flash(error)
