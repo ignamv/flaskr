@@ -28,3 +28,14 @@ def get_post(id, check_author=True):
     post['tags'] = get_post_tags(id)
     return post
 
+
+def create_post(author_id, title, body, tags):
+    db = get_db()
+    post_id = db.execute(
+        'INSERT INTO post (author_id, title, body) VALUES (?,?,?)',
+        (author_id, title, body)
+    ).lastrowid
+    #for tag in tags:
+
+    db.commit()
+    return post_id

@@ -92,3 +92,14 @@ def test_singlepost(client):
     response = client.get('/2').data
     assert b'test title' not in response
     assert b'test2' in response
+
+
+def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
+    mock = MagicMock(return_value=1234)
+    monkeypatch.setattr('flaskr.blog.create_post', mock)
+    auth.login()
+    tags = ['tag1', 'tag2']
+    data = {'title': 'created', 'body': 'abody', 'tags': ','.join(tags)}
+    client.post('/create', data=data)
+    author_id = 1
+    mock.assert_called_once_with(author_id, data['title'], data['body'], tags)
