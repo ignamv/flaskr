@@ -6,6 +6,8 @@ from ..auth import login_required, get_user_id
 from .comments import get_post_comments
 from .blueprint import bp
 from .blogdb import get_post
+# Import to get the tag views registered with the blueprint as side-effect
+from . import tags
 
 @bp.route('/')
 def index():
