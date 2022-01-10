@@ -3,7 +3,7 @@ from ..db import get_db
 from ..auth import login_required, get_user_id
 from .comments import get_post_comments
 from .blueprint import bp
-from .blogdb import get_post
+from .blogdb import get_post, create_post
 
 # Import to get the tag views registered with the blueprint as side-effect
 from . import tags
@@ -24,16 +24,6 @@ def index():
         .fetchall()
     )
     return render_template("blog/posts.html", posts=posts)
-
-
-def create_post(author_id, title, body):
-    db = get_db()
-    post_id = db.execute(
-        "INSERT INTO post (author_id, title, body) VALUES (?,?,?)",
-        (author_id, title, body),
-    ).lastrowid
-    db.commit()
-    return post_id
 
 
 @bp.route("/create", methods=("GET", "POST"))
