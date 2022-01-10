@@ -31,3 +31,10 @@ def test_init_db_command(runner, monkeypatch):
     assert 'Initialized' in result.output
     assert Recorder.called
 
+
+def test_tag_names_must_be_unique(app):
+    with app.app_context():
+        db = get_db()
+        db.execute('INSERT INTO tag (name) VALUES ("name")')
+        with pytest.raises(sqlite3.IntegrityError):
+            db.execute('INSERT INTO tag (name) VALUES ("name")')
