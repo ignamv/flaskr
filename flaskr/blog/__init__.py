@@ -75,7 +75,11 @@ def update(post_id):
         else:
             flash(error)
     return render_template(
-        "blog/new.html", post_id=post_id, title=post["title"], body=post["body"]
+        "blog/new.html",
+        post_id=post_id,
+        title=post["title"],
+        body=post["body"],
+        tags=",".join(post["tags"]),
     )
 
 

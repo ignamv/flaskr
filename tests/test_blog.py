@@ -65,6 +65,19 @@ def test_create(client, auth, app):
     assert count_posts(app) == original_count + 1
 
 
+def test_update_view_mocking(client, monkeypatch, auth):
+    post = {"title": "asdf", "body": "poiuj", "tags": ["b4", "t5"]}
+    mock_get_post = MagicMock(return_value=post)
+    monkeypatch.setattr("flaskr.blog.get_post", mock_get_post)
+    auth.login()
+    response = client.get("/1/update")
+    assert response.status_code == 200
+    data = response.data.decode()
+    assert post["title"] in data
+    assert post["body"] in data
+    assert ",".join(post["tags"]) in data
+
+
 def test_update(client, auth, app):
     auth.login()
     assert client.get("/1/update").status_code == 200
