@@ -3,26 +3,17 @@ from ..db import get_db
 from ..auth import login_required, get_user_id
 from .comments import get_post_comments
 from .blueprint import bp
-from .blogdb import get_post, create_post, update_post
+from .blogdb import get_post, create_post, update_post, get_posts
 
-# Import to register the "tag" views as a side-effect
+# Import to register the views as a side-effect
 from . import tags
+from . import rss
 
 
 @bp.route("/")
 def index():
     user_id = get_user_id()
-    posts = (
-        get_db()
-        .execute(
-            "SELECT post.id, title, body, created, author_id, username, like.user_id NOTNULL AS liked"
-            " FROM post JOIN user ON post.author_id == user.id "
-            " LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?"
-            " ORDER BY created DESC",
-            (user_id,),
-        )
-        .fetchall()
-    )
+    posts = get_posts(user_id)
     return render_template("blog/posts.html", posts=posts, title="Latest posts")
 
 
