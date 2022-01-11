@@ -83,3 +83,11 @@ def remove_post_tag(post_id, tag):
         'DELETE FROM post_tag WHERE post_id == ? AND tag_id == ?',
         (post_id, tag_id)
     )
+
+
+def get_posts(user_id):
+    return get_db().execute(
+        'SELECT post.id, title, body, created, author_id, username, like.user_id NOTNULL AS liked'
+        ' FROM post JOIN user ON post.author_id == user.id '
+        ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?'
+        ' ORDER BY created DESC', (user_id,)).fetchall()
