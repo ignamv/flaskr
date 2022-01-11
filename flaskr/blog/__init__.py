@@ -17,7 +17,8 @@ def index():
         ' FROM post JOIN user ON post.author_id == user.id '
         ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?'
         ' ORDER BY created DESC', (user_id,)).fetchall()
-    return render_template('blog/posts.html', posts=posts)
+    return render_template('blog/posts.html', posts=posts,
+                           title='Latest posts')
 
 
 @bp.route('/create', methods=('GET', 'POST'))

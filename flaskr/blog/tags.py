@@ -30,5 +30,6 @@ def posts_with_tag(tag):
     posts = get_posts_with_tag(tag, get_user_id())
     if not posts:
         abort(404)
-    return render_template('blog/posts.html', posts=posts)
+    title = f'Posts tagged with "{tag}"'
+    return render_template('blog/posts.html', posts=posts, title=title)
 
