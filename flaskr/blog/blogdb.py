@@ -1,3 +1,4 @@
+import sqlite3
 from flask import g, abort
 
 from ..db import get_db
@@ -35,13 +36,52 @@ def get_post(id, check_author=True):
     return post
 
 
+def get_possibly_new_tag_id(tag):
+    db = get_db()
+    try:
+        return db.execute("INSERT INTO tag (name) VALUES (?)", (tag,)).lastrowid
+    except sqlite3.IntegrityError:
+        return db.execute("SELECT id FROM tag WHERE name == ?", (tag,)).fetchone()["id"]
+
+
+def add_tags_to_post(post_id, tags):
+    db = get_db()
+    for tag in tags:
+        tag_id = get_possibly_new_tag_id(tag)
+        db.execute(
+            "INSERT INTO post_tag (post_id, tag_id) VALUES (?,?)", (post_id, tag_id)
+        )
+
+
 def create_post(author_id, title, body, tags):
     db = get_db()
     post_id = db.execute(
         "INSERT INTO post (author_id, title, body) VALUES (?,?,?)",
         (author_id, title, body),
     ).lastrowid
-    # for tag in tags:
-
+    add_tags_to_post(post_id, tags)
     db.commit()
     return post_id
+
+
+def update_post(post_id, title, body, tags):
+    tags = set(tags)
+    db = get_db()
+    db.execute(
+        "UPDATE post SET title = ?, body = ? WHERE id == ?", (title, body, post_id)
+    )
+    current_tags = set(get_post_tags(post_id))
+    to_be_removed_tags = current_tags - tags
+    for tag in to_be_removed_tags:
+        remove_post_tag(post_id, tag)
+    to_be_added_tags = tags - current_tags
+    add_tags_to_post(post_id, to_be_added_tags)
+    db.commit()
+
+
+def remove_post_tag(post_id, tag):
+    db = get_db()
+    tag_id = db.execute("SELECT id FROM tag WHERE name == ?", (tag,)).fetchone()["id"]
+    db.execute(
+        "DELETE FROM post_tag WHERE post_id == ? AND tag_id == ?", (post_id, tag_id)
+    )

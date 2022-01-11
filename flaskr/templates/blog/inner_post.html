@@ -16,7 +16,7 @@
     <input type="submit" value="{{ 'Like' if not post['liked'] else 'Unlike' }}">
   </form>
   {% for tag in post.tags %}
-    {{ tag }}
+  <a href="{{ url_for('blog.posts_with_tag', tag=tag) }}">{{ tag }}</a>
   {% endfor %}
 </article>
 

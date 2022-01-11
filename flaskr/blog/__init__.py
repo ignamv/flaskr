@@ -3,9 +3,9 @@ from ..db import get_db
 from ..auth import login_required, get_user_id
 from .comments import get_post_comments
 from .blueprint import bp
-from .blogdb import get_post, create_post
+from .blogdb import get_post, create_post, update_post
 
-# Import to get the tag views registered with the blueprint as side-effect
+# Import to register the "tag" views as a side-effect
 from . import tags
 
 
@@ -37,8 +37,9 @@ def create():
         body = request.form["body"]
         if not body:
             error = "Missing body"
+        tags = request.form["tags"].split(",")
         if error is None:
-            post_id = create_post(g.user["id"], title, body)
+            post_id = create_post(g.user["id"], title, body, tags)
             return redirect(url_for("blog.post", post_id=post_id))
         else:
             flash(error)
@@ -67,13 +68,9 @@ def update(post_id):
         body = request.form["body"]
         if not body:
             error = "Missing body"
+        tags = request.form["tags"].split(",")
         if error is None:
-            db = get_db()
-            db.execute(
-                "UPDATE post SET title = ?, body = ? WHERE id == ?",
-                (title, body, post_id),
-            )
-            db.commit()
+            update_post(post_id, title, body, tags)
             return redirect(url_for("blog.post", post_id=post_id))
         else:
             flash(error)

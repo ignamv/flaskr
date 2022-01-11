@@ -1,5 +1,8 @@
 import pytest
+from unittest.mock import MagicMock
 from flaskr.db import get_db
+from flaskr.blog.blogdb import create_post
+from flaskr.blog.tags import get_post_tags
 
 
 def test_index(client, auth):
@@ -58,14 +61,16 @@ def test_create(client, auth, app):
     auth.login()
     original_count = count_posts(app)
     assert client.get("/create").status_code == 200
-    client.post("/create", data={"title": "created", "body": "abody"})
+    client.post("/create", data={"title": "created", "body": "abody", "tags": ""})
     assert count_posts(app) == original_count + 1
 
 
 def test_update(client, auth, app):
     auth.login()
     assert client.get("/1/update").status_code == 200
-    client.post("/1/update", data={"id": 1, "title": "edited", "body": "edited"})
+    client.post(
+        "/1/update", data={"id": 1, "title": "edited", "body": "edited", "tags": ""}
+    )
     with app.app_context():
         db = get_db()
         post = db.execute("SELECT * FROM post WHERE id = 1").fetchone()
@@ -75,9 +80,9 @@ def test_update(client, auth, app):
 @pytest.mark.parametrize("path", ("/create", "/1/update"))
 def test_create_update_validate_input(auth, client, path):
     auth.login()
-    response = client.post(path, data={"title": "", "body": "a"})
+    response = client.post(path, data={"title": "", "body": "a", "tags": ""})
     assert b"Missing title" in response.data
-    response = client.post(path, data={"title": "a", "body": ""})
+    response = client.post(path, data={"title": "a", "body": "", "tags": ""})
     assert b"Missing body" in response.data
 
 
@@ -94,12 +99,28 @@ def test_singlepost(client):
     assert b"test2" in response
 
 
-def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
-    mock = MagicMock(return_value=1234)
-    monkeypatch.setattr("flaskr.blog.create_post", mock)
-    auth.login()
-    tags = ["tag1", "tag2"]
-    data = {"title": "created", "body": "abody", "tags": ",".join(tags)}
-    client.post("/create", data=data)
-    author_id = 1
-    mock.assert_called_once_with(author_id, data["title"], data["body"], tags)
+def test_create_post_function(app):
+    posts = [
+        (1, "tit1", "body1", []),
+        (2, "tit2", "body2", ["tag2"]),
+        (3, "tit3", "body3", ["tag2", "tag3"]),
+        (4, "tit4", "body4", ["tag4", "tag3"]),
+    ]
+    with app.app_context():
+        for author_id, title, body, tags in posts:
+            oldcount = count_posts(app)
+            create_post(author_id, title, body, tags)
+            newcount = count_posts(app)
+            assert newcount == oldcount + 1
+            postcount = newcount
+            post_id = (
+                get_db()
+                .execute(
+                    "SELECT id FROM post"
+                    " WHERE author_id == ? AND title == ? AND body == ?",
+                    (author_id, title, body),
+                )
+                .fetchone()["id"]
+            )
+            actual_tags = set(get_post_tags(post_id))
+            assert actual_tags == set(tags)
