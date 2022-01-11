@@ -68,7 +68,9 @@ def update(post_id):
             return redirect(url_for('blog.post', post_id=post_id))
         else:
             flash(error)
-    return render_template('blog/new.html', post_id=post_id, title=post['title'], body=post['body'])
+    return render_template('blog/new.html',
+            post_id=post_id, title=post['title'], body=post['body'],
+            tags=','.join(post['tags']))
 
 
 @bp.route('/<int:post_id>/delete', methods=('POST',))
