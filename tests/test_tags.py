@@ -141,3 +141,7 @@ def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
     client.post("/create", data=data)
     author_id = 1
     mock.assert_called_once_with(author_id, data["title"], data["body"], tags)
+
+
+def test_posts_with_tag_title(client):
+    assert b"<title>Posts tagged with &#34;tag1&#34;" in client.get("/tags/tag1").data

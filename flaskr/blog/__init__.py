@@ -23,7 +23,7 @@ def index():
         )
         .fetchall()
     )
-    return render_template("blog/posts.html", posts=posts)
+    return render_template("blog/posts.html", posts=posts, title="Latest posts")
 
 
 @bp.route("/create", methods=("GET", "POST"))

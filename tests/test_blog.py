@@ -137,3 +137,7 @@ def test_create_post_function(app):
             )
             actual_tags = set(get_post_tags(post_id))
             assert actual_tags == set(tags)
+
+
+def test_index_title(client):
+    assert b"<title>Latest posts" in client.get("/").data
