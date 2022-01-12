@@ -150,15 +150,20 @@ def generate_post(index):
 
 @pytest.mark.parametrize("page", [1, 2, 3])
 def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
-    posts = [generate_post(ii) for ii in range(5)]
+    npages = 3
+    posts = [generate_post(ii) for ii in range(page_size)]
     mock_get_posts = MagicMock(return_value=posts)
     monkeypatch.setattr("flaskr.blog.get_posts", mock_get_posts)
+    monkeypatch.setattr("flaskr.blog.count_posts", lambda: npages * page_size)
     mock_render = MagicMock(return_value="")
     monkeypatch.setattr("flaskr.blog.render_template", mock_render)
     response = client.get(f"/?page={page}").data.decode()
-    mock_get_posts.assert_called_once_with(-1, page)
+    mock_get_posts.assert_called_once_with(
+        -1,
+        page,
+    )
     mock_render.assert_called_once_with(
-        "blog/posts.html", posts=posts, title="Latest posts"
+        "blog/posts.html", posts=posts, title="Latest posts", page=page, npages=npages
     )
 
 
