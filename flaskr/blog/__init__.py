@@ -5,7 +5,7 @@ from ..db import get_db
 from ..auth import login_required, get_user_id
 from .comments import get_post_comments
 from .blueprint import bp
-from .blogdb import get_post, create_post, update_post, get_posts
+from .blogdb import get_post, create_post, update_post, get_posts, count_posts, page_size
 # Import to register the views as a side-effect
 from . import tags
 from . import rss
@@ -13,9 +13,13 @@ from . import rss
 @bp.route('/')
 def index():
     user_id = get_user_id()
-    posts = get_posts(user_id)
+    page = int(request.args.get('page', 1))
+    npages = (count_posts() - 1) // page_size + 1
+    if page < 1 or page > npages:
+        return redirect(url_for('.index'))
+    posts = get_posts(user_id, page)
     return render_template('blog/posts.html', posts=posts,
-                           title='Latest posts')
+                           title='Latest posts', page=page, npages=npages)
 
 
 @bp.route('/create', methods=('GET', 'POST'))

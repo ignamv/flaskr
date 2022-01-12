@@ -13,8 +13,11 @@ INSERT INTO post (title, body, author_id, created)
 VALUES
   ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00'),
   ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00'),
-  ('test3', 'test3', 1, '2020-01-01 00:00:00'),
-  ('test4', 'test4', 2, '2021-01-01 00:00:00');
+  ('test3', 'test3', 1, '2018-01-01 00:00:00'),
+  ('test4', 'test4', 2, '2017-01-01 00:00:00'),
+  ('test5', 'test5', 2, '2016-01-01 00:00:00'),
+  ('test6', 'test6', 2, '2015-01-01 00:00:00'),
+  ('test7', 'test7', 2, '2014-01-01 00:00:00');
 
 INSERT INTO comment (body, post_id, author_id, created)
 VALUES

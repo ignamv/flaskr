@@ -4,6 +4,10 @@ from flask import g, abort
 from ..db import get_db
 from .tags import get_post_tags
 
+
+page_size = 5
+
+
 def get_post(id, check_author=True):
     db = get_db()
     post = db.execute(
@@ -85,9 +89,14 @@ def remove_post_tag(post_id, tag):
     )
 
 
-def get_posts(user_id):
+def get_posts(user_id, page=1):
     return get_db().execute(
         'SELECT post.id, title, body, created, author_id, username, like.user_id NOTNULL AS liked'
         ' FROM post JOIN user ON post.author_id == user.id '
         ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?'
-        ' ORDER BY created DESC', (user_id,)).fetchall()
+        ' ORDER BY created DESC LIMIT ? OFFSET ?', 
+        (user_id, page_size, page_size * (page - 1))).fetchall()
+
+
+def count_posts():
+    return get_db().execute('SELECT COUNT(id) FROM post').fetchone()[0]
