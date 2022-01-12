@@ -42,4 +42,6 @@ def posts_with_tag(tag):
     if not posts:
         abort(404)
     title = f'Posts tagged with "{tag}"'
-    return render_template("blog/posts.html", posts=posts, title=title)
+    return render_template(
+        "blog/posts.html", posts=posts, title=title, page=1, npages=1
+    )
