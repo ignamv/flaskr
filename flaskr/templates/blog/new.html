@@ -11,7 +11,7 @@
     <label for="body">Body</label>
     <textarea name="body" id="body" required>{{ request.form.body or body }}</textarea>
     <label for="tags">Tags (separated by commas)</label>
-    <input name="tags" id="tags" value="{{ request.form.tags or tags }}" required>
+    <input name="tags" id="tags" value="{{ request.form.tags or tags }}">
     <input type="submit" value="{{ 'Create Entry' if not post_id else 'Update' }}">
   </form>
   {% if post_id %}

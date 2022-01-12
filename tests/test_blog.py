@@ -1,7 +1,8 @@
 import pytest
+from datetime import datetime
 from unittest.mock import MagicMock
 from flaskr.db import get_db
-from flaskr.blog.blogdb import create_post
+from flaskr.blog.blogdb import create_post, get_posts, count_posts, page_size
 from flaskr.blog.tags import get_post_tags
 
 
@@ -51,18 +52,13 @@ def test_exists_required(client, auth):
     assert client.post("/2000/delete").status_code == 404
 
 
-def count_posts(app):
-    with app.app_context():
-        db = get_db()
-        return db.execute("SELECT COUNT(id) FROM post").fetchone()[0]
-
-
 def test_create(client, auth, app):
     auth.login()
-    original_count = count_posts(app)
-    assert client.get("/create").status_code == 200
-    client.post("/create", data={"title": "created", "body": "abody", "tags": ""})
-    assert count_posts(app) == original_count + 1
+    with app.app_context():
+        original_count = count_posts()
+        assert client.get("/create").status_code == 200
+        client.post("/create", data={"title": "created", "body": "abody", "tags": ""})
+        assert count_posts() == original_count + 1
 
 
 def test_update_view_mocking(client, monkeypatch, auth):
@@ -121,9 +117,9 @@ def test_create_post_function(app):
     ]
     with app.app_context():
         for author_id, title, body, tags in posts:
-            oldcount = count_posts(app)
+            oldcount = count_posts()
             create_post(author_id, title, body, tags)
-            newcount = count_posts(app)
+            newcount = count_posts()
             assert newcount == oldcount + 1
             postcount = newcount
             post_id = (
@@ -141,3 +137,58 @@ def test_create_post_function(app):
 
 def test_index_title(client):
     assert b"<title>Latest posts" in client.get("/").data
+
+
+def generate_post(index):
+    return {
+        "id": index,
+        "title": f"tit{index}",
+        "body": f"body{index}",
+        "created": datetime(2000 - index, 1, 1),
+    }
+
+
+@pytest.mark.parametrize("page", [1, 2, 3])
+def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
+    posts = [generate_post(ii) for ii in range(5)]
+    mock_get_posts = MagicMock(return_value=posts)
+    monkeypatch.setattr("flaskr.blog.get_posts", mock_get_posts)
+    mock_render = MagicMock(return_value="")
+    monkeypatch.setattr("flaskr.blog.render_template", mock_render)
+    response = client.get(f"/?page={page}").data.decode()
+    mock_get_posts.assert_called_once_with(-1, page)
+    mock_render.assert_called_once_with(
+        "blog/posts.html", posts=posts, title="Latest posts"
+    )
+
+
+def test_get_posts_function(app):
+    with app.app_context():
+        total_posts = count_posts()
+        lastpage = total_posts // page_size + 1
+        for page in range(1, lastpage):
+            assert len(get_posts(-1, page=page)) == page_size
+        assert len(get_posts(-1, page=lastpage)) == (total_posts - 1) % page_size + 1
+
+
+@pytest.mark.parametrize("last_page_size", (1, page_size))
+@pytest.mark.parametrize("page", range(7))
+def test_page_links(client, monkeypatch, page, last_page_size):
+    pages = 5
+    mock_count_posts = MagicMock(return_value=(pages - 1) * page_size + last_page_size)
+    monkeypatch.setattr("flaskr.blog.count_posts", mock_count_posts)
+    response = client.get(f"/?page={page}")
+    mock_count_posts.assert_called_once_with()
+    if page < 1 or page > pages:
+        assert response.headers["Location"] == "http://localhost/"
+        return
+    data = response.data.decode()
+    assert (f'href="/?page={page-1}"' in data) == (page > 1)
+    assert (f'href="/?page={page+1}"' in data) == (page < pages)
+
+
+def test_count_posts(app):
+    with app.app_context():
+        assert count_posts() == 7
+        get_db().execute("DELETE FROM post")
+        assert count_posts() == 0
