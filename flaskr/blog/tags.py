@@ -15,7 +15,9 @@ def get_post_tags(post_id):
 
 def get_posts_with_tag(tag, user_id):
     return get_db().execute(
-        'SELECT post.id, title, body, created, author_id, username, like.user_id NOTNULL AS liked'
+        'SELECT post.id, title, body, created, author_id, username,'
+        ' like.user_id NOTNULL AS liked,'
+        ' imagebytes NOTNULL AS has_image'
         ' FROM post'
         ' JOIN user ON post.author_id == user.id'
         ' JOIN post_tag ON post_tag.post_id == post.id'

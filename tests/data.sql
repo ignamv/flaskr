@@ -9,15 +9,15 @@ VALUES
     ('test', 'pbkdf2:sha256:50000$TCI4GzcX$0de171a4f4dac32e3364c7ddc7c14f3e2fa61f2d17574483f7ffbb431b4acb2f'),
     ('other', 'pbkdf2:sha256:260000$zo4Su1dUaG23vfVr$fc34ea59029c6b1b7e19a48b86aceb862460529ab8c2fde586735261a1028640');
 
-INSERT INTO post (title, body, author_id, created)
+INSERT INTO post (title, body, author_id, created, imagebytes)
 VALUES
-  ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00'),
-  ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00'),
-  ('test3', 'test3', 1, '2018-01-01 00:00:00'),
-  ('test4', 'test4', 2, '2017-01-01 00:00:00'),
-  ('test5', 'test5', 2, '2016-01-01 00:00:00'),
-  ('test6', 'test6', 2, '2015-01-01 00:00:00'),
-  ('test7', 'test7', 2, '2014-01-01 00:00:00');
+  ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00', X'aabbccddeeff'),
+  ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00', NULL),
+  ('test3', 'test3', 1, '2018-01-01 00:00:00', NULL),
+  ('test4', 'test4', 2, '2017-01-01 00:00:00', NULL),
+  ('test5', 'test5', 2, '2016-01-01 00:00:00', NULL),
+  ('test6', 'test6', 2, '2015-01-01 00:00:00', NULL),
+  ('test7', 'test7', 2, '2014-01-01 00:00:00', NULL);
 
 INSERT INTO comment (body, post_id, author_id, created)
 VALUES

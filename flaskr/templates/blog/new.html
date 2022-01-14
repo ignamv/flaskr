@@ -5,11 +5,13 @@
 {% endblock %}
 
 {% block content %}
-  <form method="POST" class="flexform">
+  <form method="POST" class="flexform" enctype="multipart/form-data">
     <label for="title">Title</label>
     <input name="title" id="title" value="{{ request.form.title or title }}" required>
     <label for="body">Body</label>
     <textarea name="body" id="body" required>{{ request.form.body or body }}</textarea>
+    <label for="file">Image</label>
+    <input type="file" name="file" id="file" accept="image/png, image/jpeg">
     <label for="tags">Tags (separated by commas)</label>
     <input name="tags" id="tags" value="{{ request.form.tags or tags }}">
     <input type="submit" value="{{ 'Create Entry' if not post_id else 'Update' }}">
