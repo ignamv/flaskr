@@ -11,7 +11,8 @@ page_size = 5
 def get_post(id, check_author=True):
     db = get_db()
     post = db.execute(
-        "SELECT p.id, title, body, created, author_id, username"
+        "SELECT p.id, title, body, created, author_id, username,"
+        " imagebytes NOTNULL AS has_image"
         " FROM post p JOIN user u ON p.author_id = u.id"
         " WHERE p.id = ?",
         (id,),
@@ -56,22 +57,23 @@ def add_tags_to_post(post_id, tags):
         )
 
 
-def create_post(author_id, title, body, tags):
+def create_post(author_id, title, body, tags, imagebytes):
     db = get_db()
     post_id = db.execute(
-        "INSERT INTO post (author_id, title, body) VALUES (?,?,?)",
-        (author_id, title, body),
+        "INSERT INTO post (author_id, title, body, imagebytes) VALUES (?,?,?,?)",
+        (author_id, title, body, imagebytes),
     ).lastrowid
     add_tags_to_post(post_id, tags)
     db.commit()
     return post_id
 
 
-def update_post(post_id, title, body, tags):
+def update_post(post_id, title, body, tags, imagebytes):
     tags = set(tags)
     db = get_db()
     db.execute(
-        "UPDATE post SET title = ?, body = ? WHERE id == ?", (title, body, post_id)
+        "UPDATE post SET title = ?, body = ?, imagebytes = ? WHERE id == ?",
+        (title, body, imagebytes, post_id),
     )
     current_tags = set(get_post_tags(post_id))
     to_be_removed_tags = current_tags - tags
@@ -94,7 +96,9 @@ def get_posts(user_id, page=1):
     return (
         get_db()
         .execute(
-            "SELECT post.id, title, body, created, author_id, username, like.user_id NOTNULL AS liked"
+            "SELECT post.id, title, body, created, author_id, username,"
+            " like.user_id NOTNULL AS liked,"
+            " imagebytes NOTNULL AS has_image"
             " FROM post JOIN user ON post.author_id == user.id "
             " LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?"
             " ORDER BY created DESC LIMIT ? OFFSET ?",

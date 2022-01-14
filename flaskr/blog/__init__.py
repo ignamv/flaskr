@@ -21,7 +21,7 @@ from . import rss
 def index():
     user_id = get_user_id()
     page = int(request.args.get("page", 1))
-    npages = (count_posts() - 1) // page_size + 1
+    npages = max(1, (count_posts() - 1) // page_size + 1)
     if page < 1 or page > npages:
         return redirect(url_for(".index"))
     posts = get_posts(user_id, page)
@@ -42,8 +42,9 @@ def create():
         if not body:
             error = "Missing body"
         tags = request.form["tags"].split(",")
+        imagebytes = request.files["file"].read()
         if error is None:
-            post_id = create_post(g.user["id"], title, body, tags)
+            post_id = create_post(g.user["id"], title, body, tags, imagebytes)
             return redirect(url_for("blog.post", post_id=post_id))
         else:
             flash(error)
@@ -73,8 +74,9 @@ def update(post_id):
         if not body:
             error = "Missing body"
         tags = request.form["tags"].split(",")
+        imagebytes = request.files["file"].read()
         if error is None:
-            update_post(post_id, title, body, tags)
+            update_post(post_id, title, body, tags, imagebytes)
             return redirect(url_for("blog.post", post_id=post_id))
         else:
             flash(error)
@@ -117,3 +119,15 @@ def like(post_id):
         )
     db.commit()
     return redirect(request.headers.get("Referer", "/"))
+
+
+@bp.route("/<int:post_id>/image.jpg")
+def post_image(post_id):
+    row = (
+        get_db()
+        .execute("SELECT imagebytes FROM post WHERE id == ?", (post_id,))
+        .fetchone()
+    )
+    if row is None or row[0] is None:
+        abort(404)
+    return row[0]

@@ -28,3 +28,4 @@ input[type=submit] { align-self: start; min-width: 10em; }
 .linkform input[type=submit] { background: none; border: none; display: inline; min-width: 0;}
 .linkform input[type=submit]:hover { cursor: pointer; }
 a:hover, .linkform input[type=submit]:hover { text-decoration: none; }
+.post img { max-width: 50% }

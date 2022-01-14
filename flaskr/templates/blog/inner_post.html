@@ -10,13 +10,16 @@
       <a class="action" href="{{ url_for('blog.update', post_id=post['id']) }}">Edit</a>
     {% endif %}
   </header>
+  {% if post['has_image'] %}<img src="{{ url_for('blog.post_image', post_id=post['id']) }}">{% endif %}
   <p class="body">{{ post.body }}</p>
   <form method="POST" action="{{ url_for('blog.like', post_id=post['id']) }}">
     <input type="hidden" name="like" value="{{ '1' if not post['liked'] else '0' }}">
     <input type="submit" value="{{ 'Like' if not post['liked'] else 'Unlike' }}">
   </form>
-  {% for tag in post.tags %}
-  <a href="{{ url_for('blog.posts_with_tag', tag=tag) }}">{{ tag }}</a>
-  {% endfor %}
+  {% if 'tags' in post %}
+    {% for tag in post.tags %}
+    <a href="{{ url_for('blog.posts_with_tag', tag=tag) }}">{{ tag }}</a>
+    {% endfor %}
+  {% endif %}
 </article>
 

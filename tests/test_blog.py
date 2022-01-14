@@ -1,8 +1,17 @@
+import re
 import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
+from io import BytesIO
+
 from flaskr.db import get_db
-from flaskr.blog.blogdb import create_post, get_posts, count_posts, page_size
+from flaskr.blog.blogdb import (
+    create_post,
+    get_posts,
+    count_posts,
+    page_size,
+    update_post,
+)
 from flaskr.blog.tags import get_post_tags
 
 
@@ -57,7 +66,15 @@ def test_create(client, auth, app):
     with app.app_context():
         original_count = count_posts()
         assert client.get("/create").status_code == 200
-        client.post("/create", data={"title": "created", "body": "abody", "tags": ""})
+        client.post(
+            "/create",
+            data={
+                "title": "created",
+                "body": "abody",
+                "tags": "",
+                "file": (BytesIO(b""), ""),
+            },
+        )
         assert count_posts() == original_count + 1
 
 
@@ -77,21 +94,44 @@ def test_update_view_mocking(client, monkeypatch, auth):
 def test_update(client, auth, app):
     auth.login()
     assert client.get("/1/update").status_code == 200
+    new_file_contents = b"edited_image"
     client.post(
-        "/1/update", data={"id": 1, "title": "edited", "body": "edited", "tags": ""}
+        "/1/update",
+        content_type="multipart/form-data",
+        data={
+            "id": 1,
+            "title": "edited",
+            "body": "edited",
+            "tags": "",
+            "file": (BytesIO(new_file_contents), "image.jpg"),
+        },
     )
     with app.app_context():
         db = get_db()
         post = db.execute("SELECT * FROM post WHERE id = 1").fetchone()
         assert post["title"] == "edited"
+        assert post["body"] == "edited"
+        assert client.get("/1/image.jpg").data == new_file_contents
+
+
+def test_update_function_changes_image(app, client):
+    post_id = 1
+    new_file_contents = b"edited_image"
+    with app.app_context():
+        update_post(post_id, "newtit", "newbod", "newtag", new_file_contents)
+        assert client.get("/1/image.jpg").data == new_file_contents
 
 
 @pytest.mark.parametrize("path", ("/create", "/1/update"))
 def test_create_update_validate_input(auth, client, path):
     auth.login()
-    response = client.post(path, data={"title": "", "body": "a", "tags": ""})
+    response = client.post(
+        path, data={"title": "", "body": "a", "tags": "", "file": (BytesIO(b""), "")}
+    )
     assert b"Missing title" in response.data
-    response = client.post(path, data={"title": "a", "body": "", "tags": ""})
+    response = client.post(
+        path, data={"title": "a", "body": "", "tags": "", "file": (BytesIO(b""), "")}
+    )
     assert b"Missing body" in response.data
 
 
@@ -110,29 +150,30 @@ def test_singlepost(client):
 
 def test_create_post_function(app):
     posts = [
-        (1, "tit1", "body1", []),
-        (2, "tit2", "body2", ["tag2"]),
-        (3, "tit3", "body3", ["tag2", "tag3"]),
-        (4, "tit4", "body4", ["tag4", "tag3"]),
+        (1, "tit1", "body1", [], b"some_image_bytes"),
+        (2, "tit2", "body2", ["tag2"], None),
+        (3, "tit3", "body3", ["tag2", "tag3"], None),
+        (4, "tit4", "body4", ["tag4", "tag3"], None),
     ]
     with app.app_context():
-        for author_id, title, body, tags in posts:
+        for author_id, title, body, tags, imagebytes in posts:
             oldcount = count_posts()
-            create_post(author_id, title, body, tags)
+            create_post(author_id, title, body, tags, imagebytes)
             newcount = count_posts()
             assert newcount == oldcount + 1
             postcount = newcount
-            post_id = (
+            post_id, actual_imagebytes = (
                 get_db()
                 .execute(
-                    "SELECT id FROM post"
+                    "SELECT id, imagebytes FROM post"
                     " WHERE author_id == ? AND title == ? AND body == ?",
                     (author_id, title, body),
                 )
-                .fetchone()["id"]
+                .fetchone()
             )
             actual_tags = set(get_post_tags(post_id))
             assert actual_tags == set(tags)
+            assert actual_imagebytes == imagebytes
 
 
 def test_index_title(client):
@@ -197,3 +238,47 @@ def test_count_posts(app):
         assert count_posts() == 7
         get_db().execute("DELETE FROM post")
         assert count_posts() == 0
+
+
+def find_image(responsedata, file_contents):
+    urls = re.findall(r'"([^"]+.jpg)"', responsedata)
+    for url in urls:
+        if client.get(url).data == file_contents:
+            return True
+    return False
+
+
+def test_get_post_image(client):
+    response = client.get("/1/image.jpg").data
+    assert response == b"\xaa\xbb\xcc\xdd\xee\xff"
+    assert client.get("/2/image.jpg").status_code == 404
+    assert client.get("/2000/image.jpg").status_code == 404
+
+
+def test_posts_include_image(client):
+    assert b'<img src="/1/image.jpg"' in client.get("/1").data
+    assert b'<img src="/2/image.jpg"' not in client.get("/2").data
+
+
+def test_create_uploading_image(client, auth):
+    file_contents = b"somebytes"
+    auth.login()
+    response = client.post(
+        "/create",
+        content_type="multipart/form-data",
+        data={
+            "title": "title of post with image",
+            "body": "body of post with image",
+            "tags": "file",
+            "file": (BytesIO(file_contents), "image.jpg"),
+        },
+    )
+    assert response.status_code == 302
+    actual_image = client.get(response.headers["Location"] + "/image.jpg").data
+    assert actual_image == file_contents
+
+
+def test_no_posts(client, app):
+    with app.app_context():
+        get_db().execute("DELETE FROM post")
+        assert client.get("/").status_code == 200

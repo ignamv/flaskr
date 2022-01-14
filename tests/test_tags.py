@@ -1,4 +1,5 @@
 import pytest
+from io import BytesIO
 from datetime import datetime
 from unittest.mock import MagicMock
 from flaskr.blog.tags import get_post_tags, get_posts_with_tag
@@ -83,7 +84,12 @@ def test_posts_with_tag_e2e(client):
 @pytest.mark.parametrize("tags", [{"tag1", "tag2"}, {"tag3"}])
 def test_update_post_tags_integration(client, tags, app, auth):
     auth.login()
-    data = {"title": "newtit", "body": "bod", "tags": ",".join(tags)}
+    data = {
+        "title": "newtit",
+        "body": "bod",
+        "tags": ",".join(tags),
+        "file": (BytesIO(b""), ""),
+    }
     assert (
         client.post("/1/update", data=data).headers["Location"] == "http://localhost/1"
     )
@@ -96,19 +102,25 @@ def test_update_post_tags_mocking(client, monkeypatch, auth):
     for tags in [["tag1", "tag2"], ["tag3"]]:
         mock = MagicMock(return_value=123)
         monkeypatch.setattr("flaskr.blog.update_post", mock)
-        data = {"title": "newtit", "body": "bod", "tags": ",".join(tags)}
+        data = {
+            "title": "newtit",
+            "body": "bod",
+            "tags": ",".join(tags),
+            "file": (BytesIO(b""), ""),
+        }
         assert (
             client.post("/1/update", data=data).headers["Location"]
             == "http://localhost/1"
         )
-        mock.assert_called_once_with(1, data["title"], data["body"], tags)
+        mock.assert_called_once()
+        assert mock.call_args[0][:4] == (1, data["title"], data["body"], tags)
 
 
 def test_update_post_tags_function(app):
     post_id = 1
     with app.app_context():
         for tags in [["tag1", "tag2"], ["tag2", "tag3"], ["tag3"]]:
-            update_post(post_id, "newtit", "bod", tags)
+            update_post(post_id, "newtit", "bod", tags, None)
             assert set(get_post_tags(post_id)) == set(tags)
 
 
@@ -123,7 +135,12 @@ def test_remove_tag(app):
 
 def test_create_with_tag_integration(client, auth, app):
     auth.login()
-    data = {"title": "created", "body": "abody", "tags": "tag1,tag2"}
+    data = {
+        "title": "created",
+        "body": "abody",
+        "tags": "tag1,tag2",
+        "file": (BytesIO(b""), ""),
+    }
     post_url = client.post("/create", data=data).headers["Location"]
     response = client.get(post_url).data.decode()
     assert data["title"] in response
@@ -137,10 +154,16 @@ def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
     monkeypatch.setattr("flaskr.blog.create_post", mock)
     auth.login()
     tags = ["tag1", "tag2"]
-    data = {"title": "created", "body": "abody", "tags": ",".join(tags)}
+    data = {
+        "title": "created",
+        "body": "abody",
+        "tags": ",".join(tags),
+        "file": (BytesIO(b""), ""),
+    }
     client.post("/create", data=data)
     author_id = 1
-    mock.assert_called_once_with(author_id, data["title"], data["body"], tags)
+    mock.assert_called_once()
+    assert mock.call_args[0][:4] == (author_id, data["title"], data["body"], tags)
 
 
 def test_posts_with_tag_title(client):
