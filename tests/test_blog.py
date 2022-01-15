@@ -282,3 +282,21 @@ def test_no_posts(client, app):
     with app.app_context():
         get_db().execute("DELETE FROM post")
         assert client.get("/").status_code == 200
+
+
+def test_create_uploading_no_image(client, auth):
+    auth.login()
+    response = client.post(
+        "/create",
+        content_type="multipart/form-data",
+        data={
+            "title": "title of post without image",
+            "body": "body of post without image",
+            "tags": "nofile",
+            "file": (BytesIO(b""), ""),
+        },
+    )
+    assert response.status_code == 302
+    _, _, post_id = response.headers["Location"].rpartition("/")
+    response = client.get(post_id).data.decode()
+    assert f'<img src="/{post_id}/image.jpg"' not in response
