@@ -1,4 +1,4 @@
-html { font-family: sans-serif; background: #eee; padding: 1rem; }
+html { font-family: sans-serif; background: #eee; padding: 1rem; font-size: 3vmin; }
 body { max-width: 960px; margin: 0 auto; background: white; }
 h1 { font-family: serif; color: #377ba8; margin: 1rem 0; }
 a, .linkform input[type=submit] { color: #377ba8; text-decoration: underline; font-size: 1em;}
