@@ -74,7 +74,7 @@ def update(post_id):
         if not body:
             error = "Missing body"
         tags = request.form["tags"].split(",")
-        imagebytes = request.files["file"].read()
+        imagebytes = request.files["file"].read() or None
         if error is None:
             update_post(post_id, title, body, tags, imagebytes)
             return redirect(url_for("blog.post", post_id=post_id))
