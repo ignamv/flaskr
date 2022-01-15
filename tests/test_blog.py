@@ -77,7 +77,8 @@ def test_update_view_mocking(client, monkeypatch, auth):
     assert ','.join(post['tags']) in data
 
 
-def test_update(client, auth, app):
+@pytest.mark.parametrize('withfile', [False, True])
+def test_update(client, auth, app, withfile):
     auth.login()
     assert client.get('/1/update').status_code == 200
     new_file_contents = b'edited_image'
@@ -86,14 +87,18 @@ def test_update(client, auth, app):
         'title': 'edited',
         'body': 'edited',
         'tags': '',
-        'file': (BytesIO(new_file_contents), 'image.jpg'),
+        'file': (BytesIO(new_file_contents if withfile else b''),
+                 'image.jpg' if withfile else ''),
     })
     with app.app_context():
         db = get_db()
         post = db.execute('SELECT * FROM post WHERE id = 1').fetchone()
         assert post['title'] == 'edited'
         assert post['body'] == 'edited'
-        assert client.get('/1/image.jpg').data == new_file_contents
+        if withfile:
+            assert post['imagebytes'] == new_file_contents
+        else:
+            assert post['imagebytes'] is None
 
 
 def test_update_function_changes_image(app, client):
