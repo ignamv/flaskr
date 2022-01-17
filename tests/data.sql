@@ -36,3 +36,8 @@ VALUES
   (4, 1),
   (4,2);
 
+INSERT INTO like (post_id, user_id)
+VALUES
+  (5, 1),
+  (6, 1),
+  (6, 2);

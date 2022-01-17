@@ -36,6 +36,9 @@ def get_post(id, check_author=True):
         )
     post = dict(post)
     post["liked"] = liked
+    post["likes"] = db.execute(
+        "SELECT COUNT(user_id) FROM like where post_id == ?", (id,)
+    ).fetchone()[0]
     post["tags"] = get_post_tags(id)
     return post
 

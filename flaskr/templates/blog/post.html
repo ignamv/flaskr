@@ -4,6 +4,7 @@
 
 {% block content %}
   {% include 'blog/inner_post.html' %}
+  Liked by {{ post.likes }} people
   <h1>Comments</h1>
   {% for comment in comments %}
     {% include 'blog/comments/inner_comment.html' %}

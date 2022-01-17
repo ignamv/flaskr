@@ -379,3 +379,24 @@ def test_update_post_image_fails_when_image_passed_and_deletion_requested(
         ).status_code
         == 400
     )
+
+
+@pytest.mark.parametrize("has_image", [False, True])
+def test_view_post_mocking_get_post(client, monkeypatch, has_image):
+    post = {
+        "id": 123,
+        "title": "tit",
+        "body": "bod",
+        "has_image": has_image,
+        "likes": 3,
+        "tags": [],
+        "created": datetime(1900, 1, 1),
+    }
+    mock_get_post = MagicMock(return_value=post)
+    monkeypatch.setattr("flaskr.blog.get_post", mock_get_post)
+    response = client.get("/123").data.decode()
+    mock_get_post.assert_called_once_with(123, check_author=False)
+    assert post["title"] in response
+    assert post["body"] in response
+    assert ('<img src="/123/image.jpg"' in response) == has_image
+    assert f'Liked by {post["likes"]} people' in response
