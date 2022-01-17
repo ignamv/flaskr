@@ -13,6 +13,7 @@ from flaskr.blog.blogdb import (
     update_post,
 )
 from flaskr.blog.tags import get_post_tags
+from common import generate_no_file_selected, generate_file_tuple
 
 
 def test_index(client, auth):
@@ -118,15 +119,19 @@ def test_update(client, auth, app, withfile):
         if withfile:
             assert post["imagebytes"] == new_file_contents
         else:
-            assert post["imagebytes"] is None
+            assert post["imagebytes"] == b"\xaa\xbb\xcc\xdd\xee\xff"
 
 
 def test_update_function_changes_image(app, client):
     post_id = 1
     new_file_contents = b"edited_image"
     with app.app_context():
-        update_post(post_id, "newtit", "newbod", "newtag", new_file_contents)
+        update_post(post_id, "newtit", "newbod", "newtag", new_file_contents, False)
         assert client.get("/1/image.jpg").data == new_file_contents
+        update_post(post_id, "newtit", "newbod", "newtag", None, False)
+        assert client.get("/1/image.jpg").data == new_file_contents
+        update_post(post_id, "newtit", "newbod", "newtag", None, True)
+        assert client.get("/1/image.jpg").status_code == 404
 
 
 @pytest.mark.parametrize("path", ("/create", "/1/update"))
@@ -307,3 +312,70 @@ def test_create_uploading_no_image(client, auth):
     _, _, post_id = response.headers["Location"].rpartition("/")
     response = client.get(post_id).data.decode()
     assert f'<img src="/{post_id}/image.jpg"' not in response
+
+
+# TODO: test create with no tags
+
+
+@pytest.mark.parametrize(
+    ("file_", "delete_image", "expected_imagebytes", "expected_deleteimage"),
+    [
+        (generate_no_file_selected(), "off", None, False),
+        (generate_no_file_selected(), "on", None, True),
+        (generate_file_tuple(b"123"), "off", b"123", False),
+    ],
+)
+def test_update_post_image(
+    client,
+    monkeypatch,
+    auth,
+    file_,
+    delete_image,
+    expected_imagebytes,
+    expected_deleteimage,
+):
+    """
+    When no file was selected but image removal was not requested, pass no image data and do not request removal
+    When no file was selected and image removal was requested, pass no image data and request removal
+    When a file was selected and image removal was not requested, pass the image data and do not request removal
+    """
+    auth.login()
+    mock = MagicMock()
+    monkeypatch.setattr("flaskr.blog.update_post", mock)
+    client.post(
+        "/1/update",
+        data={
+            "title": "newtit",
+            "body": "bod",
+            "tags": "",
+            "file": file_,
+            "delete_image": delete_image,
+        },
+        content_type="multipart/form-data",
+    )
+    mock.assert_called_once_with(
+        1, "newtit", "bod", [], expected_imagebytes, expected_deleteimage
+    )
+
+
+def test_update_post_image_fails_when_image_passed_and_deletion_requested(
+    client, monkeypatch, auth
+):
+    """ """
+    auth.login()
+    mock = MagicMock()
+    monkeypatch.setattr("flaskr.blog.update_post", mock)
+    assert (
+        client.post(
+            "/1/update",
+            data={
+                "title": "newtit",
+                "body": "bod",
+                "tags": "",
+                "file": generate_file_tuple(b"123"),
+                "delete_image": "on",
+            },
+            content_type="multipart/form-data",
+        ).status_code
+        == 400
+    )

@@ -1,9 +1,9 @@
 import pytest
-from io import BytesIO
 from datetime import datetime
 from unittest.mock import MagicMock
 from flaskr.blog.tags import get_post_tags, get_posts_with_tag
 from flaskr.blog.blogdb import remove_post_tag, update_post
+from common import generate_no_file_selected, generate_file_tuple
 
 
 alltags = {"tag1", "tag2"}
@@ -88,7 +88,7 @@ def test_update_post_tags_integration(client, tags, app, auth):
         "title": "newtit",
         "body": "bod",
         "tags": ",".join(tags),
-        "file": (BytesIO(b""), ""),
+        "file": generate_no_file_selected(),
     }
     assert (
         client.post("/1/update", data=data).headers["Location"] == "http://localhost/1"
@@ -100,27 +100,26 @@ def test_update_post_tags_integration(client, tags, app, auth):
 def test_update_post_tags_mocking(client, monkeypatch, auth):
     auth.login()
     for tags in [["tag1", "tag2"], ["tag3"]]:
-        mock = MagicMock(return_value=123)
+        mock = MagicMock()
         monkeypatch.setattr("flaskr.blog.update_post", mock)
         data = {
             "title": "newtit",
             "body": "bod",
             "tags": ",".join(tags),
-            "file": (BytesIO(b""), ""),
+            "file": generate_no_file_selected(),
         }
         assert (
             client.post("/1/update", data=data).headers["Location"]
             == "http://localhost/1"
         )
-        mock.assert_called_once()
-        assert mock.call_args[0][:4] == (1, data["title"], data["body"], tags)
+        mock.assert_called_once_with(1, data["title"], data["body"], tags, None, False)
 
 
 def test_update_post_tags_function(app):
     post_id = 1
     with app.app_context():
         for tags in [["tag1", "tag2"], ["tag2", "tag3"], ["tag3"]]:
-            update_post(post_id, "newtit", "bod", tags, None)
+            update_post(post_id, "newtit", "bod", tags, None, False)
             assert set(get_post_tags(post_id)) == set(tags)
 
 
@@ -139,7 +138,7 @@ def test_create_with_tag_integration(client, auth, app):
         "title": "created",
         "body": "abody",
         "tags": "tag1,tag2",
-        "file": (BytesIO(b""), ""),
+        "file": generate_no_file_selected(),
     }
     post_url = client.post("/create", data=data).headers["Location"]
     response = client.get(post_url).data.decode()
@@ -158,7 +157,7 @@ def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
         "title": "created",
         "body": "abody",
         "tags": ",".join(tags),
-        "file": (BytesIO(b""), ""),
+        "file": generate_no_file_selected(),
     }
     client.post("/create", data=data)
     author_id = 1

@@ -74,9 +74,16 @@ def update(post_id):
         if not body:
             error = "Missing body"
         tags = request.form["tags"].split(",")
+        if tags == [""]:
+            tags = []
         imagebytes = request.files["file"].read() or None
+        delete_image = {"on": True, "off": False}[
+            request.form.get("delete_image", "off")
+        ]
+        if delete_image and imagebytes is not None:
+            abort(400)
         if error is None:
-            update_post(post_id, title, body, tags, imagebytes)
+            update_post(post_id, title, body, tags, imagebytes, delete_image)
             return redirect(url_for("blog.post", post_id=post_id))
         else:
             flash(error)
