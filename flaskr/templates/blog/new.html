@@ -12,6 +12,10 @@
     <textarea name="body" id="body" required>{{ request.form.body or body }}</textarea>
     <label for="file">Image</label>
     <input type="file" name="file" id="file" accept="image/png, image/jpeg">
+    {% if post_id %}
+      <input type="checkbox" name="delete_image" id="delete_image">
+      <label for="delete_image">Delete existing image?</label>
+    {% endif %}
     <label for="tags">Tags (separated by commas)</label>
     <input name="tags" id="tags" value="{{ request.form.tags or tags }}">
     <input type="submit" value="{{ 'Create Entry' if not post_id else 'Update' }}">

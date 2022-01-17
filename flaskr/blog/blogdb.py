@@ -64,13 +64,24 @@ def create_post(author_id, title, body, tags, imagebytes):
     return post_id
 
 
-def update_post(post_id, title, body, tags, imagebytes):
+def update_post(post_id, title, body, tags, imagebytes, delete_image):
     tags = set(tags)
     db = get_db()
-    db.execute(
-        'UPDATE post SET title = ?, body = ?, imagebytes = ? WHERE id == ?',
-        (title, body, imagebytes, post_id)
-    )
+    if (imagebytes is None) == delete_image:
+        # Update image, whether to set a new one or to delete
+        db.execute(
+            'UPDATE post SET title = ?, body = ?, imagebytes = ? WHERE id == ?',
+            (title, body, imagebytes, post_id)
+        )
+    elif not delete_image:
+        # Leave image as-is
+        db.execute(
+            'UPDATE post SET title = ?, body = ? WHERE id == ?',
+            (title, body, post_id)
+        )
+    else:
+        # Passing an image while requesting deletion is invalid
+        abort(400)
     current_tags = set(get_post_tags(post_id))
     to_be_removed_tags = current_tags - tags
     for tag in to_be_removed_tags:
