@@ -1,4 +1,6 @@
 import re
+import pytest
+from flaskr.blog.blogdb import get_post
 
 
 def test_like_missing_post(client, auth):
@@ -44,3 +46,14 @@ def test_like(client, auth):
     assert_likes(user2, True, False)
 
 
+@pytest.mark.parametrize(('post_id', 'expected_likes'), [(1, 0), (5, 1), (6, 2)])
+def test_get_post_returns_likes(app, post_id, expected_likes):
+    with app.app_context():
+        post = get_post(post_id, check_author=False)
+    assert post['likes'] == expected_likes
+
+
+@pytest.mark.parametrize(('post_id', 'expected_likes'), [(1, 0), (5, 1), (6, 2)])
+def test_like_count(client, post_id, expected_likes):
+    print(client.get(f'/{post_id}').data.decode())
+    assert f'Liked by {expected_likes} people' in client.get(f'/{post_id}').data.decode()
