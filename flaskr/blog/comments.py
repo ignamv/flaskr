@@ -44,7 +44,8 @@ def get_comment(post_id, comment_id):
     ret = (
         get_db()
         .execute(
-            "SELECT comment.id, user.username, comment.author_id, comment.created, comment.body"
+            "SELECT comment.id, user.username, comment.author_id, comment.created,"
+            " comment.body"
             " FROM comment JOIN user ON comment.author_id == user.id"
             " WHERE post_id == ? AND comment.id == ?",
             (post_id, comment_id),

@@ -63,7 +63,7 @@ def add_tags_to_post(post_id, tags):
 def create_post(author_id, title, body, tags, imagebytes):
     db = get_db()
     post_id = db.execute(
-        "INSERT INTO post (author_id, title, body, imagebytes) VALUES (?,?,?,?)",
+        "INSERT INTO post (author_id, title, body, imagebytes)" " VALUES (?,?,?,?)",
         (author_id, title, body, imagebytes),
     ).lastrowid
     add_tags_to_post(post_id, tags)
@@ -77,7 +77,7 @@ def update_post(post_id, title, body, tags, imagebytes, delete_image):
     if (imagebytes is None) == delete_image:
         # Update image, whether to set a new one or to delete
         db.execute(
-            "UPDATE post SET title = ?, body = ?, imagebytes = ? WHERE id == ?",
+            "UPDATE post SET title = ?, body = ?, imagebytes = ?" " WHERE id == ?",
             (title, body, imagebytes, post_id),
         )
     elif not delete_image:
