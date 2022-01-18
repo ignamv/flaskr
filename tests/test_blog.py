@@ -343,9 +343,12 @@ def test_update_post_image(
     expected_deleteimage,
 ):
     """
-    When no file was selected but image removal was not requested, pass no image data and do not request removal
-    When no file was selected and image removal was requested, pass no image data and request removal
-    When a file was selected and image removal was not requested, pass the image data and do not request removal
+    When no file was selected but image removal was not requested, pass no
+    image data and do not request removal
+    When no file was selected and image removal was requested, pass no image
+    data and request removal
+    When a file was selected and image removal was not requested, pass the
+    image data and do not request removal
     """
     auth.login()
     mock = MagicMock()
