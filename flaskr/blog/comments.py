@@ -20,7 +20,7 @@ def get_post_comments(post_id):
 def new_comment(post_id):
     db = get_db()
     if db.execute('SELECT id FROM post WHERE id == ?',
-            (post_id,)).fetchone() is None:
+                  (post_id,)).fetchone() is None:
         abort(404)
     if request.method == 'POST':
         body = request.form['body']
@@ -40,7 +40,8 @@ def new_comment(post_id):
 
 def get_comment(post_id, comment_id):
     ret = get_db().execute(
-        'SELECT comment.id, user.username, comment.author_id, comment.created, comment.body'
+        'SELECT comment.id, user.username, comment.author_id, comment.created,'
+        ' comment.body'
         ' FROM comment JOIN user ON comment.author_id == user.id'
         ' WHERE post_id == ? AND comment.id == ?',
         (post_id, comment_id)
@@ -54,7 +55,8 @@ def get_comment(post_id, comment_id):
 def comment(post_id, comment_id):
     post = get_post(post_id, check_author=False)
     comment = get_comment(post_id, comment_id)
-    return render_template('blog/comments/comment.html', post=post, comment=comment)
+    return render_template('blog/comments/comment.html', post=post,
+                           comment=comment)
 
 
 @bp.route('/<int:post_id>/comments/<int:comment_id>/delete', methods=('POST',))
@@ -69,7 +71,8 @@ def delete_comment(post_id, comment_id):
     return redirect(url_for('blog.post', post_id=post_id))
 
 
-@bp.route('/<int:post_id>/comments/<int:comment_id>/update', methods=('GET', 'POST'))
+@bp.route('/<int:post_id>/comments/<int:comment_id>/update',
+          methods=('GET', 'POST'))
 @login_required
 def update_comment(post_id, comment_id):
     post = get_post(post_id, check_author=False)
@@ -83,4 +86,5 @@ def update_comment(post_id, comment_id):
                    (body, comment_id))
         db.commit()
         return redirect(url_for('blog.post', post_id=post_id))
-    return render_template('blog/comments/new.html', post=post, comment=comment)
+    return render_template('blog/comments/new.html', post=post,
+                           comment=comment)

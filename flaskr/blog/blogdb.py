@@ -19,7 +19,8 @@ def get_post(id, check_author=True):
     ).fetchone()
     if post is None:
         abort(404, f'Post id {id} does not exist')
-    if check_author and ('user' not in g or g.user is None or post['author_id'] != g.user['id']):
+    if check_author and ('user' not in g or g.user is None or
+                         post['author_id'] != g.user['id']):
         abort(403)
     if 'user' not in g or g.user is None:
         liked = False
@@ -42,10 +43,10 @@ def get_possibly_new_tag_id(tag):
     db = get_db()
     try:
         return db.execute('INSERT INTO tag (name) VALUES (?)',
-                            (tag,)).lastrowid
+                          (tag,)).lastrowid
     except sqlite3.IntegrityError:
         return db.execute('SELECT id FROM tag WHERE name == ?',
-                            (tag,)).fetchone()['id']
+                          (tag,)).fetchone()['id']
 
 
 def add_tags_to_post(post_id, tags):
@@ -59,7 +60,8 @@ def add_tags_to_post(post_id, tags):
 def create_post(author_id, title, body, tags, imagebytes):
     db = get_db()
     post_id = db.execute(
-        'INSERT INTO post (author_id, title, body, imagebytes) VALUES (?,?,?,?)',
+        'INSERT INTO post (author_id, title, body, imagebytes)'
+        ' VALUES (?,?,?,?)',
         (author_id, title, body, imagebytes)
     ).lastrowid
     add_tags_to_post(post_id, tags)
@@ -73,7 +75,8 @@ def update_post(post_id, title, body, tags, imagebytes, delete_image):
     if (imagebytes is None) == delete_image:
         # Update image, whether to set a new one or to delete
         db.execute(
-            'UPDATE post SET title = ?, body = ?, imagebytes = ? WHERE id == ?',
+            'UPDATE post SET title = ?, body = ?, imagebytes = ?'
+            ' WHERE id == ?',
             (title, body, imagebytes, post_id)
         )
     elif not delete_image:
@@ -111,7 +114,7 @@ def get_posts(user_id, page=1):
         ' imagebytes NOTNULL AS has_image'
         ' FROM post JOIN user ON post.author_id == user.id '
         ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?'
-        ' ORDER BY created DESC LIMIT ? OFFSET ?', 
+        ' ORDER BY created DESC LIMIT ? OFFSET ?',
         (user_id, page_size, page_size * (page - 1))).fetchall()
 
 
