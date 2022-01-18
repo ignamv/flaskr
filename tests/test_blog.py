@@ -79,8 +79,15 @@ def test_create(client, auth, app):
         assert count_posts() == original_count + 1
 
 
-def test_update_view_mocking(client, monkeypatch, auth):
-    post = {"title": "asdf", "body": "poiuj", "tags": ["b4", "t5"]}
+@pytest.mark.parametrize("has_image", [False, True])
+def test_update_view_mocking(client, monkeypatch, auth, has_image):
+    post = {
+        "id": 4,
+        "title": "asdf",
+        "body": "poiuj",
+        "tags": ["b4", "t5"],
+        "has_image": has_image,
+    }
     mock_get_post = MagicMock(return_value=post)
     monkeypatch.setattr("flaskr.blog.get_post", mock_get_post)
     auth.login()
@@ -89,6 +96,7 @@ def test_update_view_mocking(client, monkeypatch, auth):
     data = response.data.decode()
     assert post["title"] in data
     assert post["body"] in data
+    assert ("Delete existing image?" in data) == has_image
     assert ",".join(post["tags"]) in data
 
 
