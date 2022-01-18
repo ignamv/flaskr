@@ -42,11 +42,15 @@ def test_display_tags_e2e(client, post_id, tags):
         assert tag not in page
 
 
-def test_display_posts_with_tag_mocking_find_posts_with_tag(client, monkeypatch):
+def test_display_posts_with_tag_mocking_find_posts_with_tag(client,
+                                                            monkeypatch):
     posts = [
-        {'id': 1, 'title': 'title1', 'body': 'body1', 'created': datetime.now()},
-        {'id': 2, 'title': 'title2', 'body': 'body2', 'created': datetime.now()},
-        {'id': 3, 'title': 'title3', 'body': 'body3', 'created': datetime.now()},
+        {'id': 1, 'title': 'title1', 'body': 'body1',
+         'created': datetime.now()},
+        {'id': 2, 'title': 'title2', 'body': 'body2',
+         'created': datetime.now()},
+        {'id': 3, 'title': 'title3', 'body': 'body3',
+         'created': datetime.now()},
     ]
     mock = MagicMock(return_value=posts)
     monkeypatch.setattr('flaskr.blog.tags.get_posts_with_tag', mock)
@@ -77,8 +81,10 @@ def test_posts_with_tag_e2e(client):
 @pytest.mark.parametrize('tags', [{'tag1', 'tag2'}, {'tag3'}])
 def test_update_post_tags_integration(client, tags, app, auth):
     auth.login()
-    data = {'title': 'newtit', 'body': 'bod', 'tags': ','.join(tags), 'file': generate_no_file_selected()}
-    assert client.post('/1/update', data=data).headers['Location'] == 'http://localhost/1'
+    data = {'title': 'newtit', 'body': 'bod', 'tags': ','.join(tags),
+            'file': generate_no_file_selected()}
+    assert client.post('/1/update', data=data
+                       ).headers['Location'] == 'http://localhost/1'
     with app.app_context():
         assert set(get_post_tags(1)) == tags
 
@@ -88,9 +94,12 @@ def test_update_post_tags_mocking(client, monkeypatch, auth):
     for tags in [['tag1', 'tag2'], ['tag3']]:
         mock = MagicMock()
         monkeypatch.setattr('flaskr.blog.update_post', mock)
-        data = {'title': 'newtit', 'body': 'bod', 'tags': ','.join(tags), 'file': generate_no_file_selected()}
-        assert client.post('/1/update', data=data).headers['Location'] == 'http://localhost/1'
-        mock.assert_called_once_with(1, data['title'], data['body'], tags, None, False)
+        data = {'title': 'newtit', 'body': 'bod', 'tags': ','.join(tags),
+                'file': generate_no_file_selected()}
+        assert client.post('/1/update', data=data
+                           ).headers['Location'] == 'http://localhost/1'
+        mock.assert_called_once_with(1, data['title'], data['body'], tags,
+                                     None, False)
 
 
 def test_update_post_tags_function(app):
@@ -112,7 +121,8 @@ def test_remove_tag(app):
 
 def test_create_with_tag_integration(client, auth, app):
     auth.login()
-    data = {'title': 'created', 'body': 'abody', 'tags': 'tag1,tag2', 'file': generate_no_file_selected()}
+    data = {'title': 'created', 'body': 'abody', 'tags': 'tag1,tag2',
+            'file': generate_no_file_selected()}
     post_url = client.post('/create', data=data).headers['Location']
     response = client.get(post_url).data.decode()
     assert data['title'] in response
@@ -126,12 +136,15 @@ def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
     monkeypatch.setattr('flaskr.blog.create_post', mock)
     auth.login()
     tags = ['tag1', 'tag2']
-    data = {'title': 'created', 'body': 'abody', 'tags': ','.join(tags), 'file': generate_no_file_selected()}
+    data = {'title': 'created', 'body': 'abody', 'tags': ','.join(tags),
+            'file': generate_no_file_selected()}
     client.post('/create', data=data)
     author_id = 1
     mock.assert_called_once()
-    assert mock.call_args[0][:4] == (author_id, data['title'], data['body'], tags)
+    assert mock.call_args[0][:4] == (author_id, data['title'], data['body'],
+                                     tags)
 
 
 def test_posts_with_tag_title(client):
-    assert b'<title>Posts tagged with &#34;tag1&#34;' in client.get('/tags/tag1').data
+    assert b'<title>Posts tagged with &#34;tag1&#34;' in client.get(
+        '/tags/tag1').data

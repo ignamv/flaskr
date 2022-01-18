@@ -5,7 +5,9 @@ from unittest.mock import MagicMock
 from io import BytesIO
 
 from flaskr.db import get_db
-from flaskr.blog.blogdb import create_post, get_posts, count_posts, page_size, update_post
+from flaskr.blog.blogdb import (
+    create_post, get_posts, count_posts, page_size,
+    update_post)
 from flaskr.blog.tags import get_post_tags
 from common import generate_no_file_selected, generate_file_tuple
 
@@ -29,7 +31,8 @@ def test_index(client, auth):
         assert string in response.data
 
 
-@pytest.mark.parametrize('path', ('/create', '/1/update', '/1/delete', '/1/like'))
+@pytest.mark.parametrize('path',
+                         ('/create', '/1/update', '/1/delete', '/1/like'))
 def test_login_required(client, auth, path):
     response = client.post(path)
     print(response.headers)
@@ -61,7 +64,8 @@ def test_create(client, auth, app):
     with app.app_context():
         original_count = count_posts()
         assert client.get('/create').status_code == 200
-        client.post('/create', data={'title': 'created', 'body': 'abody', 'tags': '', 'file': (BytesIO(b''), '')})
+        client.post('/create', data={'title': 'created', 'body': 'abody',
+                                     'tags': '', 'file': (BytesIO(b''), '')})
         assert count_posts() == original_count + 1
 
 
@@ -71,8 +75,7 @@ def test_update_view_mocking(client, monkeypatch, auth, has_image):
         'id': 4,
         'title': 'asdf',
         'body': 'poiuj',
-        'tags': ['b4',
-        't5'],
+        'tags': ['b4', 't5'],
         'has_image': has_image
     }
     mock_get_post = MagicMock(return_value=post)
@@ -115,7 +118,8 @@ def test_update_function_changes_image(app, client):
     post_id = 1
     new_file_contents = b'edited_image'
     with app.app_context():
-        update_post(post_id, 'newtit', 'newbod', 'newtag', new_file_contents, False)
+        update_post(post_id, 'newtit', 'newbod', 'newtag', new_file_contents,
+                    False)
         assert client.get('/1/image.jpg').data == new_file_contents
         update_post(post_id, 'newtit', 'newbod', 'newtag', None, False)
         assert client.get('/1/image.jpg').data == new_file_contents
@@ -126,9 +130,11 @@ def test_update_function_changes_image(app, client):
 @pytest.mark.parametrize('path', ('/create', '/1/update'))
 def test_create_update_validate_input(auth, client, path):
     auth.login()
-    response = client.post(path, data={'title': '', 'body': 'a', 'tags': '', 'file': (BytesIO(b''), '')})
+    response = client.post(path, data={'title': '', 'body': 'a', 'tags': '',
+                                       'file': (BytesIO(b''), '')})
     assert b'Missing title' in response.data
-    response = client.post(path, data={'title': 'a', 'body': '', 'tags': '', 'file': (BytesIO(b''), '')})
+    response = client.post(path, data={'title': 'a', 'body': '', 'tags': '',
+                                       'file': (BytesIO(b''), '')})
     assert b'Missing body' in response.data
 
 
@@ -182,7 +188,7 @@ def generate_post(index):
     }
 
 
-@pytest.mark.parametrize('page', [1,2,3])
+@pytest.mark.parametrize('page', [1, 2, 3])
 def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
     npages = 3
     posts = [generate_post(ii) for ii in range(page_size)]
@@ -193,7 +199,9 @@ def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
     monkeypatch.setattr('flaskr.blog.render_template', mock_render)
     response = client.get(f'/?page={page}').data.decode()
     mock_get_posts.assert_called_once_with(-1, page, )
-    mock_render.assert_called_once_with('blog/posts.html', posts=posts, title='Latest posts', page=page, npages=npages)
+    mock_render.assert_called_once_with('blog/posts.html', posts=posts,
+                                        title='Latest posts', page=page,
+                                        npages=npages)
 
 
 def test_get_posts_function(app):
@@ -202,14 +210,16 @@ def test_get_posts_function(app):
         lastpage = total_posts // page_size + 1
         for page in range(1, lastpage):
             assert len(get_posts(-1, page=page)) == page_size
-        assert len(get_posts(-1, page=lastpage)) == (total_posts - 1) % page_size + 1
+        assert len(get_posts(-1, page=lastpage)) == \
+            (total_posts - 1) % page_size + 1
 
 
 @pytest.mark.parametrize('last_page_size', (1, page_size))
 @pytest.mark.parametrize('page', range(7))
 def test_page_links(client, monkeypatch, page, last_page_size):
     pages = 5
-    mock_count_posts = MagicMock(return_value=(pages-1) * page_size + last_page_size)
+    mock_count_posts = MagicMock(return_value=(pages-1) * page_size +
+                                 last_page_size)
     monkeypatch.setattr('flaskr.blog.count_posts', mock_count_posts)
     response = client.get(f'/?page={page}')
     mock_count_posts.assert_called_once_with()
@@ -251,12 +261,13 @@ def test_posts_include_image(client):
 def test_create_uploading_image(client, auth):
     file_contents = b'somebytes'
     auth.login()
-    response = client.post('/create', content_type='multipart/form-data', data={
-        'title': 'title of post with image',
-        'body': 'body of post with image',
-        'tags': 'file',
-        'file': (BytesIO(file_contents), 'image.jpg'),
-    })
+    response = client.post(
+        '/create', content_type='multipart/form-data', data={
+            'title': 'title of post with image',
+            'body': 'body of post with image',
+            'tags': 'file',
+            'file': (BytesIO(file_contents), 'image.jpg'),
+        })
     assert response.status_code == 302
     actual_image = client.get(response.headers['Location'] + '/image.jpg').data
     assert actual_image == file_contents
@@ -270,12 +281,13 @@ def test_no_posts(client, app):
 
 def test_create_uploading_no_image(client, auth):
     auth.login()
-    response = client.post('/create', content_type='multipart/form-data', data={
-        'title': 'title of post without image',
-        'body': 'body of post without image',
-        'tags': 'nofile',
-        'file': (BytesIO(b''), ''),
-    })
+    response = client.post(
+        '/create', content_type='multipart/form-data', data={
+            'title': 'title of post without image',
+            'body': 'body of post without image',
+            'tags': 'nofile',
+            'file': (BytesIO(b''), ''),
+        })
     assert response.status_code == 302
     _, _, post_id = response.headers['Location'].rpartition('/')
     response = client.get(post_id).data.decode()
@@ -285,17 +297,21 @@ def test_create_uploading_no_image(client, auth):
 # TODO: test create with no tags
 
 
-@pytest.mark.parametrize(('file_', 'delete_image', 'expected_imagebytes', 'expected_deleteimage'), [
+@pytest.mark.parametrize(('file_', 'delete_image', 'expected_imagebytes',
+                          'expected_deleteimage'), [
     (generate_no_file_selected(), 'off', None, False),
     (generate_no_file_selected(), 'on', None, True),
     (generate_file_tuple(b'123'), 'off', b'123', False),
 ])
 def test_update_post_image(client, monkeypatch, auth, file_, delete_image,
-        expected_imagebytes, expected_deleteimage):
+                           expected_imagebytes, expected_deleteimage):
     """
-    When no file was selected but image removal was not requested, pass no image data and do not request removal
-    When no file was selected and image removal was requested, pass no image data and request removal
-    When a file was selected and image removal was not requested, pass the image data and do not request removal
+    When no file was selected but image removal was not requested, pass no
+    image data and do not request removal
+    When no file was selected and image removal was requested, pass no image
+    data and request removal
+    When a file was selected and image removal was not requested, pass the
+    image data and do not request removal
     """
     auth.login()
     mock = MagicMock()
@@ -307,7 +323,8 @@ def test_update_post_image(client, monkeypatch, auth, file_, delete_image,
         'file': file_,
         'delete_image': delete_image,
     }, content_type='multipart/form-data')
-    mock.assert_called_once_with(1, 'newtit', 'bod', [], expected_imagebytes, expected_deleteimage)
+    mock.assert_called_once_with(1, 'newtit', 'bod', [], expected_imagebytes,
+                                 expected_deleteimage)
 
 
 def test_update_post_image_fails_when_image_passed_and_deletion_requested(

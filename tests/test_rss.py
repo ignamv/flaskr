@@ -2,7 +2,8 @@ from unittest.mock import MagicMock
 
 
 def test_rss_link_in_index(client):
-    expected = b'<link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.rss" />'
+    expected = (b'<link rel="alternate" type="application/rss+xml" title="RSS"'
+                b' href="/feed.rss" />')
     assert expected in client.get('/').data
 
 
@@ -16,7 +17,8 @@ def test_rss_feed_mocking_get_posts(client, monkeypatch):
     response = client.get('/feed.rss').data.decode()
     mock_get_posts.assert_called_once_with(user_id=-1)
     assert '''<?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" \
+xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
   <channel>
     <title>Flaskr all comments feed</title>
     <link>http://localhost/</link>

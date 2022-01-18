@@ -7,4 +7,3 @@ def generate_no_file_selected():
 
 def generate_file_tuple(contents):
     return BytesIO(contents), 'filename.jpg'
-
