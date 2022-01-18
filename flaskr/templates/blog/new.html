@@ -1,27 +1,27 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}{{ 'Write New Entry' if not post_id else 'Update Entry' }}{% endblock %}</h1>
+  <h1>{% block title %}{{ 'Write New Entry' if not post else 'Update Entry' }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
   <form method="POST" class="flexform" enctype="multipart/form-data">
     <label for="title">Title</label>
-    <input name="title" id="title" value="{{ request.form.title or title }}" required>
+    <input name="title" id="title" value="{{ request.form.title or (post and post.title) }}" required>
     <label for="body">Body</label>
-    <textarea name="body" id="body" required>{{ request.form.body or body }}</textarea>
+    <textarea name="body" id="body" required>{{ request.form.body or (post and post.body) }}</textarea>
     <label for="file">Image</label>
     <input type="file" name="file" id="file" accept="image/png, image/jpeg">
-    {% if post_id %}
+    {% if post and post.has_image %}
       <input type="checkbox" name="delete_image" id="delete_image">
       <label for="delete_image">Delete existing image?</label>
     {% endif %}
     <label for="tags">Tags (separated by commas)</label>
-    <input name="tags" id="tags" value="{{ request.form.tags or tags }}">
-    <input type="submit" value="{{ 'Create Entry' if not post_id else 'Update' }}">
+    <input name="tags" id="tags" value="{{ request.form.tags or (post and ','.join(post.tags)) }}">
+    <input type="submit" value="{{ 'Create Entry' if not post else 'Update' }}">
   </form>
-  {% if post_id %}
-    <form action="{{ url_for('blog.delete', post_id=post_id) }}" method="POST">
+  {% if post %}
+    <form action="{{ url_for('blog.delete', post_id=post.id) }}" method="POST">
       <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
     </form>
   {% endif %}
