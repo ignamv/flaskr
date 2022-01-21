@@ -18,7 +18,7 @@
     {% endif %}
     <label for="tags">Tags (separated by commas)</label>
     <input name="tags" id="tags" value="{{ request.form.tags or (post and ','.join(post.tags)) }}">
-    <input type="submit" value="{{ 'Create Entry' if not post else 'Update' }}">
+    <input type="submit" id="submit_post" value="{{ 'Create Entry' if not post else 'Update' }}">
   </form>
   {% if post %}
     <form action="{{ url_for('blog.delete', post_id=post.id) }}" method="POST">
