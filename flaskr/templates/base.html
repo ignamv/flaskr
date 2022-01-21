@@ -7,14 +7,14 @@
     </head>
     <body>
         <nav>
-            <h1><a href="{{ url_for('index') }}">Flaskr</a></h1>
+            <h1><a href="{{ url_for('index') }}" id="flaskr_logo">Flaskr</a></h1>
           <ul>
             {% if g.user %}
-              <li><span>{{ g.user['username'] }}</span></li>
-              <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+              <li><span id="username">{{ g.user['username'] }}</span></li>
+              <li><a href="{{ url_for('auth.logout') }}" id="logout">Log Out</a></li>
             {% else %}
-              <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-              <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+              <li><a href="{{ url_for('auth.register') }}" id="register">Register</a></li>
+              <li><a href="{{ url_for('auth.login') }}" id="login">Log In</a></li>
             {% endif %}
           </ul>
         </nav>
