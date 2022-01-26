@@ -23,7 +23,7 @@ def test_index(client, auth):
         b'Log Out',
         b'test title',
         b'by test',
-        b'on 2018-01-01',
+        b'2018-01-01',
         b'test\nbody',
         b'href="/1/update"',
     )
