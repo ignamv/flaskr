@@ -1,20 +1,24 @@
 html { 
     font-family: sans-serif;
-    background: #eee;
+    background: #fff6ef;
     padding: 0.5rem;
     font-size: 2.5vmin; 
 }
 body { 
     max-width: 40em;
     margin: 0 auto;
+}
+body,.linkform input {
     font-family: 'Comfortaa', cursive;
+    font-size: 1em;
 }
 body>nav {
     margin-bottom: 0.5rem;
-    padding: 0.7rem;
+    padding-right: 0.7rem;
     display: flex;
     align-items: center;
-	border-radius: 5px;
+	border-radius: 0px;
+    clip-path: polygon(53px 0, 100% 0, 100% 100%, 2px 100%);
 }
 body>nav,.content { 
     border-radius: 5px; 
@@ -48,13 +52,24 @@ hr:after { content: '§';
     padding: 0 10px;}
 .post>header { margin-bottom: 1em }
 .post>img { margin-bottom: 1em; max-height: 15em; align: center;}
-a:link,a:visited,a:active { color: darkblue; text-decoration: none }
-a:hover { text-decoration: underline; }
+a:link,a:visited,a:active,.linkform input { color: darkblue; text-decoration: none }
+a:hover, .linkform input:hover { text-decoration: underline; cursor: pointer; }
 p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
 .flexform { display: flex; flex-direction: column }
 .flexform * { margin-bottom: 0.7em }
 .flexform>label { margin-bottom: 0.3em }
 .flexform #title, .flexform #body, .flexform #tags { width: 100% }
+textarea { height: 15em; }
+.linkform { display: inline; }
+.linkform input { border-width: 0; padding: 0; background: none; display: inline;}
+.likes { margin: 0.8em 0; }
+.comment { display: flex; background-color: #f9faff; margin: 0.8em 0.2em; padding: 0.8em}
+.comment>header { width: 8em; display: flex; flex-direction: column; }
+.comment>header>* { margin-bottom: 0.2em; text-align: right }
+.vertical_separator { width: 1px; background: #ced2dc; margin: 1em 2em}
+.comment:not(:hover) .hovershow { color: transparent; }
+article>section { margin-bottom: 1em; }
+#flaskr_logo img { display: block }
 /*
 .flexform>div { display: flex; }
 .flexform input { margin: 5px; }

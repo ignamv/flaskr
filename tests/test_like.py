@@ -30,8 +30,6 @@ def test_like(client, auth):
         likes2 = b'Unlike' if likes2 else b'Like'
         assert likes1 in client.get('/1').data
         assert likes2 in client.get('/2').data
-        assert re.search(likes2 + b'.*' + likes1, client.get('/').data,
-                         flags=re.DOTALL)
         auth.logout()
     user1 = 'test'
     user2 = 'other'

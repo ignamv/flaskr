@@ -10,7 +10,9 @@
 {% block content %}
   {% for post in posts %}
     <hr>
-    {% include 'blog/inner_post.html' %}
+      <article class="post">
+        {% include 'blog/inner_post.html' %}
+      </article>
   {% endfor %}
   <nav>
     {% if page > 1 %}<a href="{{ url_for('blog.index', page=page-1) }}">Previous page</a>{% endif %}

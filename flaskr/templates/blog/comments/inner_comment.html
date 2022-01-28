@@ -1,23 +1,29 @@
     <article class="comment">
       <header>
-        <div class="about">by {{ comment.username }} 
-          on {{ comment.created.isoformat(' ', 'minutes') }}
-          <a href="{{ url_for('blog.comment', post_id=post.id, comment_id=comment.id) }}">
-            Permalink
+        <div class="username">{{ comment.username }}</div>
+        <time class="hovershow">{{ comment.created.isoformat(' ', 'minutes') }}</time>
+        <a 
+          href="{{ url_for('blog.comment', post_id=post.id, comment_id=comment.id) }}"
+          class="hovershow"
+        >
+          Permalink
+        </a>
+        {% if g.user and g.user.id == comment.author_id %}
+          <a 
+            href="{{ url_for('blog.update_comment', post_id=post.id, comment_id=comment.id) }}"
+            class="hovershow"
+          >
+            Update
           </a>
-          {% if g.user and g.user.id == comment.author_id %}
-            <a href="{{ url_for('blog.update_comment', post_id=post.id, comment_id=comment.id) }}">
-              Update
-            </a>
-            <form class="linkform" 
-              method="POST"
-              action="{{ url_for('blog.delete_comment', post_id=post.id, comment_id=comment.id) }}"
-              onsubmit="return confirm('Are you sure you want to delete this comment?');"
-            >
-              <input type="submit" value="Delete">
-            </form>
-          {% endif %}
-        </div>
+          <form class="linkform" 
+            method="POST"
+            action="{{ url_for('blog.delete_comment', post_id=post.id, comment_id=comment.id) }}"
+            onsubmit="return confirm('Are you sure you want to delete this comment?');"
+          >
+            <input type="submit" value="Delete" class="hovershow">
+          </form>
+        {% endif %}
       </header>
+      <div class="vertical_separator"></div>
       <p class="body">{{ comment.body }}</p>
     </article>
