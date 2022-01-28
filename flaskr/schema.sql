@@ -17,6 +17,9 @@ CREATE TABLE post (
     FOREIGN KEY (author_id) REFERENCES user (id)
 );
 
+-- For posts index (sorted by date)
+CREATE INDEX post__created ON post (created);
+
 CREATE TABLE like (
     post_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
@@ -35,10 +38,15 @@ CREATE TABLE comment (
     FOREIGN KEY (author_id) REFERENCES user (id)
 );
 
+-- For post comments view (sorted by date)
+CREATE INDEX comment__created ON comment (created);
+
 CREATE TABLE tag (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL
 );
+
+CREATE INDEX tag__name ON tag (name);
 
 CREATE TABLE post_tag (
     post_id INTEGER NOT NULL,
@@ -47,4 +55,6 @@ CREATE TABLE post_tag (
     FOREIGN KEY (tag_id) REFERENCES tag (id)
     PRIMARY KEY (post_id, tag_id)
 );
+
+CREATE INDEX post_tag__tag_id ON post_tag (tag_id);
 
