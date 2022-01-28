@@ -3,9 +3,10 @@
 {% block title %}{{ 'New' if not comment else 'Update' }} comment on "{{ post.title }}"{% endblock %}
 
 {% block content %}
-<form method="POST">
-    <textarea name="body" required>{{ comment.body if comment else '' }}</textarea>
-    <input type="submit" value="Post comment">
+<form method="POST" class="flexform">
+  <label for="body">Comment body</label>
+  <textarea name="body" required>{{ comment.body if comment else '' }}</textarea>
+  <input type="submit" value="Post comment">
 </form>
 {% endblock %}
 
