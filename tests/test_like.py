@@ -1,6 +1,8 @@
 import re
 import pytest
+from unittest.mock import MagicMock
 from flaskr.blog.blogdb import get_post
+from flaskr.blog import build_how_many_people_like_string
 
 
 def test_like_missing_post(client, auth):
@@ -52,6 +54,27 @@ def test_get_post_returns_likes(app, post_id, expected_likes):
     with app.app_context():
         post = get_post(post_id, check_author=False)
     assert post["likes"] == expected_likes
+
+
+@pytest.mark.parametrize(
+    ("likes", "liked", "expected"),
+    [
+        (0, False, "no one so far"),
+        (1, False, "1 person"),
+        (9, False, "9 people"),
+        (9, True, "you and 8 other people"),
+    ],
+)
+def test_like_string_unit(likes, liked, expected):
+    assert build_how_many_people_like_string(likes, liked) == expected
+
+
+def test_post_likes_mocking(monkeypatch, client):
+    return_value = "a lot of people"
+    mock = MagicMock(return_value=return_value)
+    monkeypatch.setattr("flaskr.blog.build_how_many_people_like_string", mock)
+    assert return_value in client.get("/6").data.decode()
+    mock.assert_called_once_with(2, False)
 
 
 @pytest.mark.parametrize(("post_id", "expected_likes"), [(1, 0), (5, 1), (6, 2)])

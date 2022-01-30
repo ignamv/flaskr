@@ -6,10 +6,10 @@
   <article class="post">
     {% include 'blog/inner_post.html' %}
     <section class="likes">
-      Liked by {{ post.likes }} people. 
+      Liked by {{ likes }}.
       <form method="POST" class="linkform" action="{{ url_for('blog.like', post_id=post['id']) }}">
         <input type="hidden" name="like" value="{{ '1' if not post['liked'] else '0' }}">
-        <input type="submit" value="{{ 'Like' if not post['liked'] else 'Unlike' }}">
+        <input type="submit" value="{{ '☆ Like' if not post['liked'] else '★ Unlike' }}">
       </form>
     </section>
     <section class="tags">

@@ -58,7 +58,8 @@ def post(post_id):
     if post is None:
         flash("Invalid post")
         return redirect(url_for("index"))
-    return render_template("blog/post.html", post=post, comments=comments)
+    likes = build_how_many_people_like_string(post["likes"], post["liked"])
+    return render_template("blog/post.html", post=post, comments=comments, likes=likes)
 
 
 @bp.route("/<int:post_id>/update", methods=("GET", "POST"))
@@ -132,3 +133,14 @@ def post_image(post_id):
     if row is None or row[0] is None:
         abort(404)
     return row[0]
+
+
+def build_how_many_people_like_string(likes, liked):
+    """Build string reporting how many people liked a post, specifying if the user liked it"""
+    if likes == 0:
+        return "no one so far"
+    likes -= liked
+    you_and = "you and " if liked else ""
+    other = " other" if liked else ""
+    people = " people" if likes > 1 else " person"
+    return you_and + str(likes) + other + people
