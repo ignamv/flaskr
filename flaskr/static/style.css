@@ -1,43 +1,52 @@
-html { 
+/*
+ *
+ * Boxes
+ *
+ */
+html {
     font-family: sans-serif;
     background: #fff6ef;
     padding: 0.5rem;
-    font-size: 2.5vmin; 
+    font-size: 2.5vmin;
 }
-body { 
+body {
     max-width: 40em;
-    margin: 0 auto;
+    margin: 0 auto; /* center horizontally */
 }
 body,.linkform input {
     font-family: 'Comfortaa', cursive;
     font-size: 1em;
 }
-body>nav {
+#topnavigation {
     margin-bottom: 0.5rem;
     padding-right: 0.7rem;
     display: flex;
     align-items: center;
-	border-radius: 0px;
     clip-path: polygon(53px 0, 100% 0, 100% 100%, 2px 100%);
 }
-body>nav,.content { 
-    border-radius: 5px; 
+#topnavigation,#content {
+    border-radius: 5px;
     background: white;
     border: thin solid #bbb;
 }
-.content { padding: 1rem; }
+#content { padding: 1rem; }
+/*
+ *
+ * Headers
+ *
+ */
+/* Only for logo alt text */
 h1 { font-size: 2em; color: black; }
-h2 { font-size: 1.8em; text-align: center; }
+/* Heading on top of content box, if present, and before comments */
+h2 { font-size: 1.8em; text-align: center; margin-top: 1em; margin-bottom: 1em;}
+/* Post titles */
 h3 { font-size: 1.5em; margin-bottom: 0.5em; color: black;}
-.content h1, .content h2 { margin-bottom: 0.3em;}
-header { display: flex; width: 100%;}
-header>* { flex: 1 }
-header>*:nth-child(1) { flex-grow: 1;}
-header>* { flex-grow: 0; }
-body>nav>* { flex: 1; }
-body>nav ul { text-align: right }
-body>nav ul li { display: inline; }
-hr { 
+/*
+ *
+ * Somewhat generic rules
+ *
+ */
+hr {
     height: 0px;
     text-align: center;
     border-width: 1px 0 0 0;
@@ -50,30 +59,34 @@ hr:after { content: '§';
     top: -0.55em;
     background: white;
     padding: 0 10px;}
-.post>header { margin-bottom: 1em }
-.post>img { margin-bottom: 1em; max-height: 15em; align: center;}
 a:link,a:visited,a:active,.linkform input { color: darkblue; text-decoration: none }
 a:hover, .linkform input:hover { text-decoration: underline; cursor: pointer; }
-p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
+textarea { height: 15em; }
 .flexform { display: flex; flex-direction: column }
 .flexform * { margin-bottom: 0.7em }
 .flexform>label { margin-bottom: 0.3em }
 .flexform #title, .flexform #body, .flexform #tags { width: 100% }
-textarea { height: 15em; }
 .linkform { display: inline; }
 .linkform input { border-width: 0; padding: 0; background: none; display: inline;}
+/*
+ *
+ * More specific rules
+ *
+ */
+#content h1, #content h2 { margin-bottom: 0.3em;}
+#content>header { display: flex; }
+.post>header>*:nth-child(1), #content>header>*:nth-child(1) { flex-grow: 1;}
+body>nav>* { flex: 1; }
+body>nav ul { text-align: right }
+body>nav ul li { display: inline; }
+.post>header { display: flex; margin-bottom: 1em }
+.post>img { margin-bottom: 1em; max-height: 15em; align: center;}
+p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
 .likes { margin: 0.8em 0; }
 .comment { display: flex; background-color: #f9faff; margin: 0.8em 0.2em; padding: 0.8em}
-.comment>header { width: 8em; display: flex; flex-direction: column; }
+.comment>header { width: 8em; display: flex; flex-direction: column; flex-shrink: 0}
+.comment>header>.username { margin-bottom: 1em; }
 .comment>header>* { margin-bottom: 0.2em; text-align: right }
 .vertical_separator { width: 1px; background: #ced2dc; margin: 1em 2em}
-.comment:not(:hover) .hovershow { color: transparent; }
 article>section { margin-bottom: 1em; }
 #flaskr_logo img { display: block }
-/*
-.flexform>div { display: flex; }
-.flexform input { margin: 5px; }
-.flexform>div>input#title, .flexform>div>textarea#body { flex-grow: 1; }
- */
-/* debugging */
-/*header>* { border: thin solid red;}*/

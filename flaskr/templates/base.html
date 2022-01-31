@@ -13,9 +13,9 @@
         <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ url_for('blog.rss_feed') }}" />
     </head>
     <body>
-        <nav>
+        <nav id="topnavigation">
             <a href="{{ url_for('index') }}" id="flaskr_logo">
-              <img src="{{ url_for('static', filename='logo.png') }}">
+              <h1><img src="{{ url_for('static', filename='logo.png') }}" alt="Flaskr"></h1>
             </a>
           <ul>
             {% if g.user %}
@@ -27,7 +27,7 @@
             {% endif %}
           </ul>
         </nav>
-        <section class="content">
+        <section id="content">
           <header>{% block header %}{% endblock %}</header>
           {% for message in get_flashed_messages() %}
             <div class="flash">{{ message }}</div>
