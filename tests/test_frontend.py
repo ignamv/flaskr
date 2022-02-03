@@ -2,6 +2,7 @@ import re
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from flask import url_for
 from werkzeug.routing import RequestRedirect, MethodNotAllowed, NotFound
@@ -16,14 +17,12 @@ def browser(live_server):
 
 class PageObject(object):
     def __init__(self, webdriver):
+        WebDriverWait(webdriver, timeout=2).until(self.in_correct_page)
         self.webdriver = webdriver
-        self.assert_in_correct_page()
 
-    def assert_in_correct_page(self):
-        match = re.match(self.title_regex, self.webdriver.title)
-        assert match is not None, (
-            f'Title "{self.webdriver.title}" does not'
-            f' match "{self.title_regex}"')
+    def in_correct_page(self, webdriver):
+        match = re.match(self.title_regex, webdriver.title)
+        return match is not None
 
     def go_home(self):
         self.webdriver.find_element(By.ID, 'flaskr_logo').click()
@@ -127,9 +126,9 @@ class Post(object):
 
 
 class PostPage(PageObject):
-    def assert_in_correct_page(self):
-        assert len(self.webdriver.find_elements(By.CLASS_NAME, 'post_title')
-                   ) == 1, 'Post page should have exactly one post'
+    def in_correct_page(self, webdriver):
+        # Post page should have exactly one post
+        return len(webdriver.find_elements(By.CLASS_NAME, 'post_title')) == 1
 
     def get_post(self):
         return find_posts(self.webdriver)[0]
