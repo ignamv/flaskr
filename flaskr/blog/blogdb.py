@@ -107,15 +107,29 @@ def remove_post_tag(post_id, tag):
     )
 
 
-def get_posts(user_id, page=1):
+def get_posts(user_id, page=1, searchquery=None):
+    if searchquery is not None:
+        searchquery = '%' + searchquery + '%'
+        where = (
+            ' WHERE post.title LIKE :searchquery'
+            ' OR post.body LIKE :searchquery'
+        )
+    else:
+        where = ''
     return get_db().execute(
         'SELECT post.id, title, body, created, author_id, username,'
         ' like.user_id NOTNULL AS liked,'
         ' imagebytes NOTNULL AS has_image'
         ' FROM post JOIN user ON post.author_id == user.id '
-        ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == ?'
-        ' ORDER BY created DESC LIMIT ? OFFSET ?',
-        (user_id, page_size, page_size * (page - 1))).fetchall()
+        ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == :user_id'
+        + where +
+        ' ORDER BY created DESC LIMIT :page_size OFFSET :offset',
+        {
+            'user_id': user_id,
+            'page_size': page_size,
+            'offset': page_size * (page - 1),
+            'searchquery': searchquery,
+        }).fetchall()
 
 
 def count_posts():

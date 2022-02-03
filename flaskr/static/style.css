@@ -90,3 +90,4 @@ p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
 .vertical_separator { width: 1px; background: #ced2dc; margin: 1em 2em}
 article>section { margin-bottom: 1em; }
 #flaskr_logo img { display: block }
+#topnavigation form { display: inline }

@@ -16,13 +16,18 @@ from . import rss
 @bp.route('/')
 def index():
     user_id = get_user_id()
+    searchquery = request.args.get('searchquery')
     page = int(request.args.get('page', 1))
     npages = max(1, (count_posts() - 1) // page_size + 1)
     if page < 1 or page > npages:
         return redirect(url_for('.index'))
-    posts = get_posts(user_id, page)
+    posts = get_posts(user_id, page, searchquery=searchquery)
+    if not searchquery:
+        title = 'Latest posts'
+    else:
+        title = f'Search for "{searchquery}"'
     return render_template('blog/posts.html', posts=posts,
-                           title='Latest posts', page=page, npages=npages)
+                           title=title, page=page, npages=npages)
 
 
 @bp.route('/create', methods=('GET', 'POST'))
