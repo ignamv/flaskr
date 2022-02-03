@@ -76,7 +76,6 @@ textarea { height: 15em; }
 #content h1, #content h2 { margin-bottom: 0.3em;}
 #content>header { display: flex; }
 .post>header>*:nth-child(1), #content>header>*:nth-child(1) { flex-grow: 1;}
-body>nav>* { flex: 1; }
 body>nav ul { text-align: right }
 body>nav ul li { display: inline; }
 .post>header { display: flex; margin-bottom: 1em }
@@ -91,3 +90,5 @@ p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
 article>section { margin-bottom: 1em; }
 #flaskr_logo img { display: block }
 #topnavigation form { display: inline }
+#topnavigation ul { flex: 1 }
+#searchbox { width: 10em; }
