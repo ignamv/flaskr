@@ -18,9 +18,11 @@
               <h1><img src="{{ url_for('static', filename='logo.png') }}" alt="Flaskr"></h1>
             </a>
           <ul>
-            <form>
-              <input type="search" id="searchbox" name="searchquery" placeholder="Search posts">
-            </form>
+            <li>
+              <form>
+                <input type="search" id="searchbox" name="searchquery" placeholder="Search posts">
+              </form>
+            </li>
             {% if g.user %}
               <li><span id="username">{{ g.user['username'] }}</span></li>
               <li><a href="{{ url_for('auth.logout') }}" id="logout">Log Out</a></li>
