@@ -219,10 +219,7 @@ def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
     mock_render = MagicMock(return_value="")
     monkeypatch.setattr("flaskr.blog.render_template", mock_render)
     response = client.get(f"/?page={page}").data.decode()
-    mock_get_posts.assert_called_once_with(
-        -1,
-        page,
-    )
+    mock_get_posts.assert_called_once_with(-1, page, searchquery=None)
     mock_render.assert_called_once_with(
         "blog/posts.html", posts=posts, title="Latest posts", page=page, npages=npages
     )
@@ -416,3 +413,12 @@ def test_view_post_mocking_get_post(client, monkeypatch, has_image, liked):
         assert f'Liked by you and {post["likes"]-1} other people' in response
     else:
         assert f'Liked by {post["likes"]} people' in response
+
+
+def test_index_search(app):
+    # Search in body, case insensitive
+    (post,) = get_posts(-1, 1, searchquery="bOdY2")
+    assert post["title"] == "test2"
+    # Search in title
+    (post,) = get_posts(-1, 1, searchquery="test title")
+    assert post["title"] == "test title"

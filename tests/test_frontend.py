@@ -2,6 +2,7 @@ import re
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from flask import url_for
@@ -29,10 +30,6 @@ class PageObject(object):
         self.webdriver.find_element(By.ID, "flaskr_logo").click()
         return HomePage(self.webdriver)
 
-
-class HomePage(PageObject):
-    title_regex = "Latest posts - Flaskr$"
-
     def register(self):
         self.webdriver.find_element(By.ID, "register").click()
         return RegisterPage(self.webdriver)
@@ -41,15 +38,34 @@ class HomePage(PageObject):
         self.webdriver.find_element(By.ID, "logout").click()
         return HomePage(self.webdriver)
 
-    def newpost(self):
-        self.webdriver.find_element(By.ID, "newpost").click()
-        return NewPostPage(self.webdriver)
-
     def get_username(self):
         try:
             return self.webdriver.find_element(By.ID, "username").text
         except NoSuchElementException:
             return None
+
+    def search(self, query):
+        box = self.webdriver.find_element(By.ID, "searchbox")
+        box.send_keys(query)
+        box.send_keys(Keys.RETURN)
+        return ResultsPage(self.webdriver, query)
+
+
+class ResultsPage(PageObject):
+    def __init__(self, webdriver, searchquery):
+        self.title_regex = f"Search.*{re.escape(searchquery)}.*Flaskr$"
+        super(ResultsPage, self).__init__(webdriver)
+
+    def posts(self):
+        return find_posts(self.webdriver)
+
+
+class HomePage(PageObject):
+    title_regex = "Latest posts - Flaskr$"
+
+    def newpost(self):
+        self.webdriver.find_element(By.ID, "newpost").click()
+        return NewPostPage(self.webdriver)
 
 
 class RegisterPage(PageObject):
@@ -177,11 +193,19 @@ class TestTour1:
         updatepage.submit_bad(self.title, "", self.tags)
         return updatepage.submit_good(self.title, self.body, self.tags)
 
+    def search(self, homepage):
+        results = homepage.search("test3")
+        (post,) = results.posts()
+        assert post.get_title() == "test3"
+        results = results.search("missing")
+        assert not results.posts()
+        return results
+
     def logout(self, homepage):
         homepage = homepage.logout()
         assert homepage.get_username() is None
 
-    def test_register_post(self, browser):
+    def test_tour(self, browser):
         self.browser = browser
         loginpage = self.register()
         homepage = self.login(loginpage)
@@ -192,4 +216,5 @@ class TestTour1:
         post = postpage.get_post()
         self.check_post(post)
         homepage = postpage.go_home()
-        self.logout(homepage)
+        results = self.search(homepage)
+        self.logout(results)
