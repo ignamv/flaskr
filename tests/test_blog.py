@@ -344,13 +344,15 @@ def test_update_post_image_fails_when_image_passed_and_deletion_requested(
 
 
 @pytest.mark.parametrize('has_image', [False, True])
-def test_view_post_mocking_get_post(client, monkeypatch, has_image):
+@pytest.mark.parametrize('liked', [False, True])
+def test_view_post_mocking_get_post(client, monkeypatch, has_image, liked):
     post = {
         'id': 123,
         'title': 'tit',
         'body': 'bod',
         'has_image': has_image,
         'likes': 3,
+        'liked': liked,
         'tags': [],
         'created': datetime(1900, 1, 1),
     }
@@ -361,4 +363,7 @@ def test_view_post_mocking_get_post(client, monkeypatch, has_image):
     assert post['title'] in response
     assert post['body'] in response
     assert ('<img src="/123/image.jpg"' in response) == has_image
-    assert f'Liked by {post["likes"]} people' in response
+    if liked:
+        assert f'Liked by you and {post["likes"]-1} other people' in response
+    else:
+        assert f'Liked by {post["likes"]} people' in response

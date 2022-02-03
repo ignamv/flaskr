@@ -75,9 +75,11 @@ def test_post_likes_mocking(monkeypatch, client):
     mock.assert_called_once_with(2, False)
 
 
-@pytest.mark.parametrize(('post_id', 'expected_likes'),
-                         [(1, 0), (5, 1), (6, 2)])
-def test_like_count(client, post_id, expected_likes):
+@pytest.mark.parametrize(('post_id', 'expected'), [
+    (1, 'no one so far'),
+    (5, '1 person'),
+    (6, '2 people')])
+def test_like_count(client, post_id, expected):
     print(client.get(f'/{post_id}').data.decode())
-    assert f'Liked by {expected_likes} people' in client.get(
+    assert f'Liked by {expected}' in client.get(
         f'/{post_id}').data.decode()
