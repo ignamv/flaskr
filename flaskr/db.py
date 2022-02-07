@@ -1,19 +1,26 @@
 import sqlite3
-import datetime
+from datetime import datetime, timezone
 
 import click
 from flask import current_app, g
 from flask.cli import with_appcontext
 
 
+def parse_timestamp_utc(b):
+    s = b.decode()
+    if "+" not in s:
+        s += "+00:00"
+    ret = datetime.fromisoformat(s)
+    return ret
+
+
+sqlite3.register_converter("TIMESTAMP", parse_timestamp_utc)
+
+
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(
             current_app.config["DATABASE"], detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        sqlite3.register_converter(
-            "TIMESTAMP",
-            lambda s: datetime.datetime.fromisoformat(s.decode() + "+00:00"),
         )
         g.db.row_factory = sqlite3.Row
     return g.db
