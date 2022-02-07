@@ -11,7 +11,8 @@ def rss_feed():
     generator.title('Flaskr all comments feed')
     generator.link(href=request.url_root)
     generator.description('A Flask learning experience')
-    for post in get_posts(user_id=-1):
+    _, posts = get_posts(user_id=-1)
+    for post in posts:
         entry = generator.add_entry()
         entry.title(post['title'])
         entry.link(href=url_for('blog.post', post_id=post['id']))

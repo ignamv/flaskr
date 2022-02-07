@@ -108,6 +108,11 @@ def remove_post_tag(post_id, tag):
 
 
 def get_posts(user_id, page=1, searchquery=None):
+    """
+    Return given page of posts. Optionally search title and body.
+
+    user_id is used to determine which posts the user liked
+    """
     if searchquery is not None:
         searchquery = '%' + searchquery + '%'
         where = (
@@ -116,20 +121,32 @@ def get_posts(user_id, page=1, searchquery=None):
         )
     else:
         where = ''
-    return get_db().execute(
+    fields = {
+        'user_id': user_id,
+        'page_size': page_size,
+        'offset': page_size * (page - 1),
+        'searchquery': searchquery,
+    }
+    posts = [dict(row) for row in get_db().execute(
         'SELECT post.id, title, body, created, author_id, username,'
         ' like.user_id NOTNULL AS liked,'
-        ' imagebytes NOTNULL AS has_image'
+        ' imagebytes NOTNULL AS has_image,'
+        ' COUNT(*) OVER() as resultcount'
         ' FROM post JOIN user ON post.author_id == user.id '
         ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == :user_id'
         + where +
         ' ORDER BY created DESC LIMIT :page_size OFFSET :offset',
-        {
-            'user_id': user_id,
-            'page_size': page_size,
-            'offset': page_size * (page - 1),
-            'searchquery': searchquery,
-        }).fetchall()
+        fields
+    ).fetchall()]
+    if posts:
+        count = posts[0]['resultcount']
+    else:
+        count = 0
+    for post in posts:
+        del post['resultcount']
+        post['liked'] = bool(post['liked'])
+        post['has_image'] = bool(post['has_image'])
+    return count, posts
 
 
 def count_posts():
