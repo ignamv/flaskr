@@ -57,12 +57,22 @@ def add_tags_to_post(post_id, tags):
                    (post_id, tag_id))
 
 
-def create_post(author_id, title, body, tags, imagebytes):
+def create_post(author_id, title, body, tags, imagebytes, created=None):
     db = get_db()
+    fields = {
+        'author_id': author_id,
+        'title': title,
+        'body': body,
+        'imagebytes': imagebytes,
+        'created': created,
+    }
+    cols = ['author_id', 'title', 'body', 'imagebytes']
+    if created is not None:
+        cols.append('created')
     post_id = db.execute(
-        'INSERT INTO post (author_id, title, body, imagebytes)'
-        ' VALUES (?,?,?,?)',
-        (author_id, title, body, imagebytes)
+        'INSERT INTO post (' + ','.join(cols) + ')'
+        ' VALUES (' + ','.join(':' + col for col in cols) + ')',
+        fields
     ).lastrowid
     add_tags_to_post(post_id, tags)
     db.commit()

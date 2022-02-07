@@ -1,13 +1,13 @@
 import re
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from io import BytesIO
 
 from flaskr.db import get_db
 from flaskr.blog.blogdb import (
     create_post, get_posts, count_posts, page_size,
-    update_post)
+    update_post, get_post)
 from flaskr.blog import build_result_number_string
 from flaskr.blog.tags import get_post_tags
 from common import generate_no_file_selected, generate_file_tuple
@@ -408,3 +408,20 @@ def test_index_shows_number_of_results(url, expected_first, expected_last,
     assert first == expected_first
     assert last == expected_last
     assert total == expected_total
+
+
+def test_create_post_created_date_argument(app):
+    db = get_db()
+    # Default: created date is current date
+    postid = create_post(author_id=1, title='title', body='body', tags=[], imagebytes=None)
+    post = get_post(postid, False)
+    print(post['created'])
+    assert abs(
+        (post['created'] - datetime.now(timezone.utc)).total_seconds()
+    ) < 5
+    # Optional: specify creation time
+    some_datetime = datetime(2019, 3, 4, tzinfo=timezone.utc)
+    postid = create_post(author_id=1, title='title', body='body', tags=[], imagebytes=None, created=some_datetime)
+    post = get_post(postid, False)
+    print(post['created'])
+    assert post['created'] == some_datetime
