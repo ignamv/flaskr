@@ -138,3 +138,13 @@ def build_how_many_people_like_string(likes, liked):
     other = ' other' if liked else ''
     people = ' people' if likes > 1 else ' person'
     return you_and + str(likes) + other + people
+
+
+def build_result_number_string(page, page_size, total_posts):
+    if total_posts == 0:
+        return 'No posts were found'
+    first_post = 1 + (page - 1) * page_size
+    last_post = min(first_post + page_size - 1, total_posts)
+    if last_post != first_post:
+        return f'Showing posts {first_post}-{last_post} out of {total_posts}'
+    return f'Showing post {first_post} out of {total_posts}'
