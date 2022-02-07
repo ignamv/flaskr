@@ -12,6 +12,7 @@ from flaskr.blog.blogdb import (
     page_size,
     update_post,
 )
+from flaskr.blog import build_result_number_string
 from flaskr.blog.tags import get_post_tags
 from common import generate_no_file_selected, generate_file_tuple
 
@@ -422,3 +423,37 @@ def test_index_search(app):
     # Search in title
     (post,) = get_posts(-1, 1, searchquery="test title")
     assert post["title"] == "test title"
+
+
+@pytest.mark.parametrize(
+    ("page", "page_size", "total_posts", "expected"),
+    [
+        (1, 5, 0, "No posts were found"),
+        (1, 5, 1, "Showing post 1 out of 1"),
+        (1, 5, 2, "Showing posts 1-2 out of 2"),
+        (1, 5, 7, "Showing posts 1-5 out of 7"),
+        (2, 5, 7, "Showing posts 6-7 out of 7"),
+    ],
+)
+def test_result_number_function(page, page_size, total_posts, expected):
+    assert build_result_number_string(page, page_size, total_posts) == expected
+
+
+def test_index_shows_number_of_results(client):
+    def extract_result_count(url):
+        response = client.get(url).data.decode()
+        return tuple(
+            map(
+                int,
+                re.search(
+                    r"Showing results\s*(\d+)-(\d+)\s*from (\d+)",
+                    response,
+                    flags=re.DOTALL,
+                ).groups(),
+            )
+        )
+
+    total_posts = count_posts()
+    assert extract_result_count("/") == (1, 5, total_posts)
+    assert extract_result_count("/?page=2") == (6, 7, total_posts)
+    assert extract_result_count("/tags/tag1") == (1, 2, 2)
