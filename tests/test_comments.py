@@ -3,7 +3,7 @@ import re
 from flask import render_template, g
 from flaskr.db import get_db
 from flaskr.blog.comments import get_post_comments
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 from test_auth import login_url
@@ -20,14 +20,14 @@ def test_get_post_comments(app):
                 "body": "comment11",
                 "author_id": 1,
                 "username": "test",
-                "created": datetime(1911, 1, 1),
+                "created": datetime(1911, 1, 1, tzinfo=timezone.utc),
             },
             {
                 "id": 2,
                 "body": "comment12",
                 "author_id": 2,
                 "username": "other",
-                "created": datetime(1912, 1, 1),
+                "created": datetime(1912, 1, 1, tzinfo=timezone.utc),
             },
         ]
         assert dicts(get_post_comments(2)) == [
@@ -36,14 +36,14 @@ def test_get_post_comments(app):
                 "body": "comment21",
                 "author_id": 1,
                 "username": "test",
-                "created": datetime(1921, 1, 1),
+                "created": datetime(1921, 1, 1, tzinfo=timezone.utc),
             },
             {
                 "id": 4,
                 "body": "comment22",
                 "author_id": 2,
                 "username": "other",
-                "created": datetime(1922, 1, 1),
+                "created": datetime(1922, 1, 1, tzinfo=timezone.utc),
             },
         ]
 
