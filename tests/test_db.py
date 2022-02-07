@@ -39,3 +39,9 @@ def test_tag_names_must_be_unique(app):
         db.execute('INSERT INTO tag (name) VALUES ("name")')
         with pytest.raises(sqlite3.IntegrityError):
             db.execute('INSERT INTO tag (name) VALUES ("name")')
+
+
+def test_timezone(app):
+    db = get_db()
+    timestamp = db.execute("SELECT created FROM post").fetchone()[0]
+    assert timestamp.tzinfo is not None
