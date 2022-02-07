@@ -11,11 +11,8 @@ page_size = 5
 def get_post(id, check_author=True):
     db = get_db()
     post = db.execute(
-        'SELECT p.id, title, body, created, author_id, username,'
-        ' imagebytes NOTNULL AS has_image'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE p.id = ?',
-        (id,)
+        'SELECT p.id, title, body, created, author_id, username, has_image'
+        ' FROM posts_view p WHERE p.id = ?', (id,)
     ).fetchone()
     if post is None:
         abort(404, f'Post id {id} does not exist')
@@ -138,12 +135,9 @@ def get_posts(user_id, page=1, searchquery=None):
         'searchquery': searchquery,
     }
     posts = [dict(row) for row in get_db().execute(
-        'SELECT post.id, title, body, created, author_id, username,'
-        ' like.user_id NOTNULL AS liked,'
-        ' imagebytes NOTNULL AS has_image,'
+        'SELECT post.id, title, body, created, author_id, username, has_image,'
         ' COUNT(*) OVER() as resultcount'
-        ' FROM post JOIN user ON post.author_id == user.id '
-        ' LEFT JOIN like ON post.id == like.post_id AND like.user_id == :user_id'
+        ' FROM posts_view post'
         + where +
         ' ORDER BY created DESC LIMIT :page_size OFFSET :offset',
         fields
@@ -154,7 +148,6 @@ def get_posts(user_id, page=1, searchquery=None):
         count = 0
     for post in posts:
         del post['resultcount']
-        post['liked'] = bool(post['liked'])
         post['has_image'] = bool(post['has_image'])
     return count, posts
 

@@ -467,11 +467,11 @@ def test_get_posts(nposts, app):
         'created',
         'id',
         'has_image',
-        'liked',
         'username',
     )
     fields_getpost = fields_getposts + (
         'tags',
+        'liked',
         'likes',
     )
     posts = generate_posts(nposts)
