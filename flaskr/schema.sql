@@ -20,6 +20,13 @@ CREATE TABLE post (
 -- For posts index (sorted by date)
 CREATE INDEX post__created ON post (created);
 
+-- For posts index, just need author name and checking if the post has an image
+CREATE VIEW posts_view AS
+    SELECT post.id AS id, title, body, created, author_id, username,
+    imagebytes NOTNULL AS has_image
+    FROM post
+    JOIN user author ON post.author_id == author.id;
+
 CREATE TABLE like (
     post_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
