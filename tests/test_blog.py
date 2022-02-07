@@ -486,3 +486,75 @@ def test_create_post_created_date_argument(app):
     post = get_post(postid, False)
     print(post["created"])
     assert post["created"] == some_datetime
+
+
+def generate_posts(nposts):
+    db = get_db()
+    db.execute("DELETE FROM post")
+    db.commit()
+    posts = []
+    for ii in range(nposts):
+        # Only even posts have image, odd posts don't
+        has_image = ii % 2 == 0
+        post = {
+            # Alternate two posts from author 1, two from author 2
+            "author_id": (ii & 2) // 2 + 1,
+            "title": f"title{ii}",
+            "body": "\n".join(
+                [f"body{ii}"] + [f"line{line}" for line in range(ii + 1)]
+            ),
+            "imagebytes": None if not has_image else b"imagedata" + bytes(ii),
+            # Post N has tags tag1..tagN
+            "tags": [f"tag{ntag}" for ntag in range(1, ii + 1)],
+            "created": datetime(2000 + ii, 2, 3, 11, 58, 23, tzinfo=timezone.utc),
+        }
+        postid = create_post(**post)
+        post.update(
+            {
+                "id": postid,
+                "has_image": has_image,
+                "liked": False,
+                "likes": 0,
+                "username": {1: "test", 2: "other"}[post["author_id"]],
+            }
+        )
+        posts.insert(0, post)
+    return posts
+
+
+@pytest.mark.parametrize("nposts", range(page_size * 2 + 1))
+def test_get_posts(nposts, app):
+    """Test get_post() and get_posts() with many sets of posts"""
+    # What fields are returned by get_posts() and get_post()
+    fields_getposts = (
+        "author_id",
+        "title",
+        "body",
+        "created",
+        "id",
+        "has_image",
+        "liked",
+        "username",
+    )
+    fields_getpost = fields_getposts + (
+        "tags",
+        "likes",
+    )
+    posts = generate_posts(nposts)
+    pages = [
+        posts[start : start + page_size]
+        for start in range(0, max(len(posts), 1), page_size)
+    ]
+    for pagenumber, page in enumerate(pages, 1):
+        count, actual_posts = get_posts(-1, pagenumber)
+        assert count == nposts
+        assert len(actual_posts) == len(page)
+        for actual, expected in zip(actual_posts, page):
+            expected_getpost = {
+                k: v for k, v in expected.items() if k in fields_getpost
+            }
+            assert get_post(expected["id"], False) == expected_getpost
+            expected_getposts = {
+                k: v for k, v in expected.items() if k in fields_getposts
+            }
+            assert actual == expected_getposts
