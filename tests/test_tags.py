@@ -166,4 +166,7 @@ def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
 
 
 def test_posts_with_tag_title(client):
-    assert b"<title>Posts tagged with &#34;tag1&#34;" in client.get("/tags/tag1").data
+    assert (
+        "<title>Posts tagged with &#34;tag1&#34;"
+        in client.get("/tags/tag1").data.decode()
+    )

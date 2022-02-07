@@ -18,22 +18,22 @@ from common import generate_no_file_selected, generate_file_tuple
 
 
 def test_index(client, auth):
-    response = client.get("/")
-    assert b"Log In" in response.data
-    assert b"Register" in response.data
+    response = client.get("/").data.decode()
+    assert "Log In" in response
+    assert "Register" in response
 
     auth.login()
-    response = client.get("/")
+    response = client.get("/").data.decode()
     strings = (
-        b"Log Out",
-        b"test title",
-        b"by test",
-        b"2018-01-01",
-        b"test\nbody",
-        b'href="/1/update"',
+        "Log Out",
+        "test title",
+        "by test",
+        "2018-01-01",
+        "test\nbody",
+        'href="/1/update"',
     )
     for string in strings:
-        assert string in response.data
+        assert string in response
 
 
 @pytest.mark.parametrize("path", ("/create", "/1/update", "/1/delete", "/1/like"))
@@ -54,7 +54,7 @@ def test_author_required(app, client, auth):
     assert client.post("/1/update").status_code == 403
     assert client.post("/1/delete").status_code == 403
     # Can't see edit link for other user's post
-    assert b'href="/1/update"' not in client.get("/").data
+    assert 'href="/1/update"' not in client.get("/").data.decode()
 
 
 def test_exists_required(client, auth):
@@ -149,24 +149,24 @@ def test_create_update_validate_input(auth, client, path):
     response = client.post(
         path, data={"title": "", "body": "a", "tags": "", "file": (BytesIO(b""), "")}
     )
-    assert b"Missing title" in response.data
+    assert "Missing title" in response.data.decode()
     response = client.post(
         path, data={"title": "a", "body": "", "tags": "", "file": (BytesIO(b""), "")}
     )
-    assert b"Missing body" in response.data
+    assert "Missing body" in response.data.decode()
 
 
 def test_delete(client, auth):
     auth.login()
     response = client.post("/1/delete")
     assert response.headers["Location"] == "http://localhost/"
-    assert b"test title" not in client.get("/").data
+    assert "test title" not in client.get("/").data.decode()
 
 
 def test_singlepost(client):
-    response = client.get("/2").data
-    assert b"test title" not in response
-    assert b"test2" in response
+    response = client.get("/2").data.decode()
+    assert "test title" not in response
+    assert "test2" in response
 
 
 def test_create_post_function(app):
@@ -198,7 +198,7 @@ def test_create_post_function(app):
 
 
 def test_index_title(client):
-    assert b"<title>Latest posts" in client.get("/").data
+    assert "<title>Latest posts" in client.get("/").data.decode()
 
 
 def generate_post(index):
@@ -274,8 +274,8 @@ def test_get_post_image(client):
 
 
 def test_posts_include_image(client):
-    assert b'<img src="/1/image.jpg"' in client.get("/1").data
-    assert b'<img src="/2/image.jpg"' not in client.get("/2").data
+    assert '<img src="/1/image.jpg"' in client.get("/1").data.decode()
+    assert '<img src="/2/image.jpg"' not in client.get("/2").data.decode()
 
 
 def test_create_uploading_image(client, auth):

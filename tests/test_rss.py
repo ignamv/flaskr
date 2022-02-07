@@ -3,10 +3,10 @@ from unittest.mock import MagicMock
 
 def test_rss_link_in_index(client):
     expected = (
-        b'<link rel="alternate" type="application/rss+xml" title="RSS"'
-        b' href="/feed.rss" />'
+        '<link rel="alternate" type="application/rss+xml" title="RSS"'
+        ' href="/feed.rss" />'
     )
-    assert expected in client.get("/").data
+    assert expected in client.get("/").data.decode()
 
 
 def test_rss_feed_mocking_get_posts(client, monkeypatch):

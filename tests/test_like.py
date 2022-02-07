@@ -27,10 +27,10 @@ def test_like(client, auth):
 
     def assert_likes(user, likes1, likes2):
         auth.login(user)
-        likes1 = b"Unlike" if likes1 else b"Like"
-        likes2 = b"Unlike" if likes2 else b"Like"
-        assert likes1 in client.get("/1").data
-        assert likes2 in client.get("/2").data
+        likes1 = "Unlike" if likes1 else "Like"
+        likes2 = "Unlike" if likes2 else "Like"
+        assert likes1 in client.get("/1").data.decode()
+        assert likes2 in client.get("/2").data.decode()
         auth.logout()
 
     user1 = "test"
