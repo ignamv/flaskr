@@ -25,7 +25,7 @@ def index():
     npages = max(1, (count_posts() - 1) // page_size + 1)
     if page < 1 or page > npages:
         return redirect(url_for(".index"))
-    posts = get_posts(user_id, page, searchquery=searchquery)
+    count, posts = get_posts(user_id, page, searchquery=searchquery)
     if not searchquery:
         title = "Latest posts"
     else:

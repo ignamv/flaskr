@@ -14,7 +14,7 @@ def test_rss_feed_mocking_get_posts(client, monkeypatch):
         {"title": "tit1", "body": "o" * 200, "id": 1},
         {"title": "tit2", "body": "a" * 200, "id": 2},
     ]
-    mock_get_posts = MagicMock(return_value=posts)
+    mock_get_posts = MagicMock(return_value=(2, posts))
     monkeypatch.setattr("flaskr.blog.rss.get_posts", mock_get_posts)
     response = client.get("/feed.rss").data.decode()
     mock_get_posts.assert_called_once_with(user_id=-1)

@@ -214,7 +214,7 @@ def generate_post(index):
 def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
     npages = 3
     posts = [generate_post(ii) for ii in range(page_size)]
-    mock_get_posts = MagicMock(return_value=posts)
+    mock_get_posts = MagicMock(return_value=(page_size * npages, posts))
     monkeypatch.setattr("flaskr.blog.get_posts", mock_get_posts)
     monkeypatch.setattr("flaskr.blog.count_posts", lambda: npages * page_size)
     mock_render = MagicMock(return_value="")
@@ -231,8 +231,8 @@ def test_get_posts_function_paging(app):
         total_posts = count_posts()
         lastpage = total_posts // page_size + 1
         for page in range(1, lastpage):
-            assert len(get_posts(-1, page=page)) == page_size
-        assert len(get_posts(-1, page=lastpage)) == (total_posts - 1) % page_size + 1
+            assert len(get_posts(-1, page=page)[1]) == page_size
+        assert len(get_posts(-1, page=lastpage)[1]) == (total_posts - 1) % page_size + 1
 
 
 @pytest.mark.parametrize("last_page_size", (1, page_size))
@@ -418,10 +418,10 @@ def test_view_post_mocking_get_post(client, monkeypatch, has_image, liked):
 
 def test_index_search(app):
     # Search in body, case insensitive
-    (post,) = get_posts(-1, 1, searchquery="bOdY2")
+    (post,) = get_posts(-1, 1, searchquery="bOdY2")[1]
     assert post["title"] == "test2"
     # Search in title
-    (post,) = get_posts(-1, 1, searchquery="test title")
+    (post,) = get_posts(-1, 1, searchquery="test title")[1]
     assert post["title"] == "test title"
 
 
