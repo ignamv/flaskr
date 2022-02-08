@@ -7,7 +7,7 @@ from io import BytesIO
 from flaskr.db import get_db
 from flaskr.blog.blogdb import (
     create_post, get_posts, count_posts, page_size,
-    update_post, get_post)
+    update_post, get_post, get_post_image)
 from flaskr.blog import build_result_number_string
 from flaskr.blog.tags import get_post_tags
 from common import generate_no_file_selected, generate_file_tuple
@@ -441,7 +441,7 @@ def generate_posts(nposts):
             'title': f'title{ii}',
             'body': '\n'.join([f'body{ii}'] + 
                               [f'line{line}' for line in range(ii+1)]),
-            'imagebytes': None if not has_image else b'imagedata' +  bytes(ii),
+            'imagebytes': None if not has_image else f'imagedata{ii}'.encode(),
             # Post N has tags tag1..tagN
             'tags': [f'tag{ntag}' for ntag in range(1, ii + 1)],
             'created': datetime(2000 + ii, 2, 3, 11, 58, 23, tzinfo=timezone.utc)
@@ -457,8 +457,8 @@ def generate_posts(nposts):
         posts.insert(0, post)
     return posts
 @pytest.mark.parametrize('nposts', range(page_size*2 + 1))
-def test_get_posts(nposts, app):
-    """Test get_post() and get_posts() with many sets of posts"""
+def test_get_posts_and_get_post_image(nposts, app):
+    """Test get_post, get_posts and get_post_image with many sets of posts"""
     # What fields are returned by get_posts() and get_post()
     fields_getposts = (
         'author_id',
@@ -487,3 +487,8 @@ def test_get_posts(nposts, app):
             expected_getposts = {k: v for k, v in expected.items()
                                  if k in fields_getposts}
             assert actual == expected_getposts
+            if expected['has_image']:
+                assert get_post_image(expected['id']) == expected['imagebytes']
+            else:
+                with pytest.raises(KeyError):
+                    get_post_image(expected['id'])
