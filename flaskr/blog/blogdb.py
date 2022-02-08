@@ -156,3 +156,14 @@ def get_posts(user_id, page=1, searchquery=None):
 
 def count_posts():
     return get_db().execute("SELECT COUNT(id) FROM post").fetchone()[0]
+
+
+def get_post_image(post_id):
+    row = (
+        get_db()
+        .execute("SELECT imagebytes FROM post WHERE id == ?", (post_id,))
+        .fetchone()
+    )
+    if row is None or row[0] is None:
+        raise KeyError
+    return row[0]

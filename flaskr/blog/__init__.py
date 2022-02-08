@@ -10,6 +10,7 @@ from .blogdb import (
     get_posts,
     count_posts,
     page_size,
+    get_post_image,
 )
 
 # Import to register the views as a side-effect
@@ -130,14 +131,11 @@ def like(post_id):
 
 @bp.route("/<int:post_id>/image.jpg")
 def post_image(post_id):
-    row = (
-        get_db()
-        .execute("SELECT imagebytes FROM post WHERE id == ?", (post_id,))
-        .fetchone()
-    )
-    if row is None or row[0] is None:
+    try:
+        imagebytes = get_post_image(post_id)
+    except KeyError:
         abort(404)
-    return row[0]
+    return imagebytes
 
 
 def build_how_many_people_like_string(likes, liked):
