@@ -19,8 +19,9 @@ def get_post_tags(post_id):
 
 
 def get_posts_with_tag(tag, user_id):
-    return (
-        get_db()
+    posts = [
+        dict(row)
+        for row in get_db()
         .execute(
             "SELECT post.id, title, body, created, author_id, username, has_image"
             " FROM posts_view post"
@@ -31,7 +32,10 @@ def get_posts_with_tag(tag, user_id):
             (tag,),
         )
         .fetchall()
-    )
+    ]
+    for post in posts:
+        post["has_image"] = bool(post["has_image"])
+    return posts
 
 
 @bp.route("/tags/<string:tag>")
