@@ -9,7 +9,7 @@ from flaskr.blog.blogdb import (
     create_post, get_posts, count_posts, page_size,
     update_post, get_post, get_post_image)
 from flaskr.blog import build_result_number_string
-from flaskr.blog.tags import get_post_tags
+from flaskr.blog.tags import get_post_tags, get_posts_with_tag
 from common import generate_no_file_selected, generate_file_tuple
 
 
@@ -459,7 +459,7 @@ def generate_posts(nposts):
 @pytest.mark.parametrize('nposts', range(page_size*2 + 1))
 def test_get_posts_and_get_post_image(nposts, app):
     """Test get_post, get_posts and get_post_image with many sets of posts"""
-    # What fields are returned by get_posts() and get_post()
+    # What fields are returned by get_posts() and get_posts_with_tag()
     fields_getposts = (
         'author_id',
         'title',
@@ -469,6 +469,7 @@ def test_get_posts_and_get_post_image(nposts, app):
         'has_image',
         'username',
     )
+    # What fields are returned by get_post()
     fields_getpost = fields_getposts + (
         'tags',
         'liked',
@@ -492,3 +493,18 @@ def test_get_posts_and_get_post_image(nposts, app):
             else:
                 with pytest.raises(KeyError):
                     get_post_image(expected['id'])
+    all_tags = {tag for post in posts for tag in post['tags']}
+    for tag in all_tags:
+        expected_posts_with_tag = [post for post in posts if tag in post['tags']]
+        actual_posts_with_tag = get_posts_with_tag(tag, -1)
+        assert len(expected_posts_with_tag) == len(actual_posts_with_tag)
+        for expected, actual in zip(expected_posts_with_tag, actual_posts_with_tag):
+            expected = {k: v for k, v in expected.items()
+                                 if k in fields_getposts}
+            assert actual == expected
+
+
+def test_url_for(client, app):
+    from flask import url_for
+    print(url_for('blog.index', page=2))
+    assert False
