@@ -502,9 +502,3 @@ def test_get_posts_and_get_post_image(nposts, app):
             expected = {k: v for k, v in expected.items()
                                  if k in fields_getposts}
             assert actual == expected
-
-
-def test_url_for(client, app):
-    from flask import url_for
-    print(url_for('blog.index', page=2))
-    assert False
