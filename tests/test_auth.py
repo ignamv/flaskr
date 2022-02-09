@@ -1,6 +1,7 @@
 import pytest
 from flask import g, session
 from flaskr.db import get_db
+from flaskr.auth_db import register_user
 
 
 login_url = "http://localhost/auth/login"
@@ -61,3 +62,16 @@ def test_logout(client, auth):
     with client:
         auth.logout()
         assert "user_id" not in session
+
+
+def test_password_hash_unique(app):
+    """Ensure password hash is salted with a unique salt"""
+    register_user("example1", "samepassword")
+    register_user("example2", "samepassword")
+    hashes = {
+        row[0]
+        for row in get_db()
+        .execute('SELECT password FROM user WHERE username LIKE "example%"')
+        .fetchall()
+    }
+    assert len(hashes) == 2
