@@ -524,8 +524,12 @@ def generate_posts(nposts):
 
 
 @pytest.mark.parametrize("nposts", range(page_size * 2 + 1))
-def test_get_posts_and_get_post_image(nposts, app):
-    """Test get_post, get_posts and get_post_image with many sets of posts"""
+def test_get_posts_and_get_post_image_and_get_posts_with_tag(nposts, app):
+    """
+    Test get_post, get_posts, get_posts_with_tag and get_post_image
+
+    Using many sets of posts of various lengths (to test paging)
+    """
     # What fields are returned by get_posts() and get_posts_with_tag()
     fields_getposts = (
         "author_id",
