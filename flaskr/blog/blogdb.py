@@ -2,7 +2,6 @@ import sqlite3
 from flask import g, abort
 
 from ..db import get_db
-from .tags import get_post_tags
 
 
 page_size = 5
@@ -114,7 +113,7 @@ def remove_post_tag(post_id, tag):
     )
 
 
-def get_posts(user_id, page=1, searchquery=None):
+def get_posts(page=1, searchquery=None):
     """
     Return given page of posts. Optionally search title and body.
 
@@ -129,7 +128,6 @@ def get_posts(user_id, page=1, searchquery=None):
     else:
         where = ''
     fields = {
-        'user_id': user_id,
         'page_size': page_size,
         'offset': page_size * (page - 1),
         'searchquery': searchquery,
@@ -162,3 +160,33 @@ def get_post_image(post_id):
     if row is None or row[0] is None:
         raise KeyError
     return row[0]
+
+
+def get_post_tags(post_id):
+    return [row[0] for row in get_db().execute(
+        'SELECT tag.name FROM tag JOIN post_tag'
+        ' ON tag.id == post_tag.tag_id'
+        ' WHERE post_tag.post_id == ?',
+        (post_id,)
+    ).fetchall()]
+
+
+def get_posts_with_tag(tag, page):
+    posts = [dict(row) for row in get_db().execute(
+        'SELECT post.id, title, body, created, author_id, username, has_image,'
+        ' COUNT(*) OVER() as resultcount'
+        ' FROM posts_view post'
+        ' JOIN post_tag ON post_tag.post_id == post.id'
+        ' JOIN tag ON post_tag.tag_id == tag.id'
+        ' WHERE tag.name == :tag'
+        ' ORDER BY created DESC LIMIT :page_size OFFSET :offset',
+        {'tag': tag, 'page_size': page_size, 'offset': page_size * (page - 1)}
+    ).fetchall()]
+    if posts:
+        count = posts[0]['resultcount']
+    else:
+        count = 0
+    for post in posts:
+        post['has_image'] = bool(post['has_image'])
+        del post['resultcount']
+    return count, posts

@@ -1,8 +1,7 @@
 import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
-from flaskr.blog.tags import get_post_tags, get_posts_with_tag
-from flaskr.blog.blogdb import remove_post_tag, update_post
+from flaskr.blog.blogdb import remove_post_tag, update_post, get_post_tags, get_posts_with_tag
 from common import generate_no_file_selected, generate_file_tuple
 
 
@@ -52,10 +51,10 @@ def test_display_posts_with_tag_mocking_find_posts_with_tag(client,
         {'id': 3, 'title': 'title3', 'body': 'body3',
          'created': datetime.now()},
     ]
-    mock = MagicMock(return_value=posts)
-    monkeypatch.setattr('flaskr.blog.tags.get_posts_with_tag', mock)
+    mock = MagicMock(return_value=(len(posts), posts))
+    monkeypatch.setattr('flaskr.blog.get_posts_with_tag', mock)
     response = client.get('/tags/thetag').data.decode()
-    mock.assert_called_once_with('thetag', -1)
+    mock.assert_called_once_with('thetag', page=1)
     for post in posts:
         assert post['title'] in response
         assert post['body'] in response
@@ -69,7 +68,8 @@ def test_display_posts_with_tag_mocking_find_posts_with_tag(client,
 def test_get_posts_with_tag(app, tag, expected_titles):
     untagged = ['test title']
     with app.app_context():
-        posts = get_posts_with_tag(tag, -1)
+        count, posts = get_posts_with_tag(tag, page=1)
+    assert count == len(expected_titles)
     actual_titles = {post['title'] for post in posts}
     assert actual_titles == expected_titles
 

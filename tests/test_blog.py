@@ -7,9 +7,10 @@ from io import BytesIO
 from flaskr.db import get_db
 from flaskr.blog.blogdb import (
     create_post, get_posts, count_posts, page_size,
-    update_post, get_post, get_post_image)
+    update_post, get_post, get_post_image,
+    get_post_tags, get_posts_with_tag
+)
 from flaskr.blog import build_result_number_string
-from flaskr.blog.tags import get_post_tags, get_posts_with_tag
 from common import generate_no_file_selected, generate_file_tuple
 
 
@@ -199,10 +200,16 @@ def test_posts_paging_mocking_get_posts(client, page, monkeypatch):
     mock_render = MagicMock(return_value='')
     monkeypatch.setattr('flaskr.blog.render_template', mock_render)
     response = client.get(f'/?page={page}').data.decode()
-    mock_get_posts.assert_called_once_with(-1, page, searchquery=None)
-    mock_render.assert_called_once_with('blog/posts.html', posts=posts,
-                                        title='Latest posts', page=page,
-                                        npages=npages)
+    mock_get_posts.assert_called_once_with(page=page, searchquery=None)
+    mock_render.assert_called_once()
+    kwargs = {
+        'posts': posts,
+        'title': 'Latest posts',
+        'page': page,
+        'npages': npages,
+    }
+    for k, expected in kwargs.items():
+        assert mock_render.call_args.kwargs[k] == expected
 
 
 def test_get_posts_function_paging(app):
@@ -210,8 +217,8 @@ def test_get_posts_function_paging(app):
         total_posts = count_posts()
         lastpage = total_posts // page_size + 1
         for page in range(1, lastpage):
-            assert len(get_posts(-1, page=page)[1]) == page_size
-        assert len(get_posts(-1, page=lastpage)[1]) == \
+            assert len(get_posts(page=page)[1]) == page_size
+        assert len(get_posts(page=lastpage)[1]) == \
             (total_posts - 1) % page_size + 1
 
 
@@ -219,11 +226,12 @@ def test_get_posts_function_paging(app):
 @pytest.mark.parametrize('page', range(7))
 def test_page_links(client, monkeypatch, page, last_page_size):
     pages = 5
-    mock_count_posts = MagicMock(return_value=(pages-1) * page_size +
-                                 last_page_size)
-    monkeypatch.setattr('flaskr.blog.count_posts', mock_count_posts)
+    post_count = (pages-1) * page_size + last_page_size
+    posts = [{'id': ii, 'created': datetime.now()} for ii in range(page_size)]
+    mock_get_posts = MagicMock(return_value=(post_count, posts))
+    monkeypatch.setattr('flaskr.blog.get_posts', mock_get_posts)
     response = client.get(f'/?page={page}')
-    mock_count_posts.assert_called_once_with()
+    mock_get_posts.assert_called_once_with(page=page, searchquery=None)
     if page < 1 or page > pages:
         assert response.headers['Location'] == 'http://localhost/'
         return
@@ -372,10 +380,10 @@ def test_view_post_mocking_get_post(client, monkeypatch, has_image, liked):
 
 def test_index_search(app):
     # Search in body, case insensitive
-    post, = get_posts(-1, 1, searchquery='bOdY2')[1]
+    post, = get_posts(page=1, searchquery='bOdY2')[1]
     assert post['title'] == 'test2'
     # Search in title
-    post, = get_posts(-1, 1, searchquery='test title')[1]
+    post, = get_posts(page=1, searchquery='test title')[1]
     assert post['title'] == 'test title'
 
 
@@ -390,19 +398,20 @@ def test_result_number_function(page, page_size, total_posts, expected):
     assert build_result_number_string(page, page_size, total_posts) == expected
 
 
-@pytest.mark.xfail()
 @pytest.mark.parametrize(
     ('url', 'expected_first', 'expected_last', 'expected_total'), [
         ('/', 1, 5, 7),
         ('/?page=2', 6, 7, 7),
+        ('/?searchquery=word', 1, 3, 3),
         ('/tags/tag1', 1, 2, 2),
     ]
 )
-def test_index_shows_number_of_results(url, expected_first, expected_last,
+def test_index_shows_number_of_results(client, url, expected_first, expected_last,
                                        expected_total):
     response = client.get(url).data.decode()
+    print(response)
     first, last, total = map(int, re.search(
-        r'Showing results\s*(\d+)-(\d+)\s*from (\d+)', 
+        r'Showing posts\s*(\d+)-(\d+)\s*out of (\d+)', 
         response, flags=re.DOTALL
     ).groups())
     assert first == expected_first
@@ -425,6 +434,15 @@ def test_create_post_created_date_argument(app):
     post = get_post(postid, False)
     print(post['created'])
     assert post['created'] == some_datetime
+
+
+def paginate_array(array, page_size):
+    """
+    Split array into page_size-sized parts
+
+    If array is empty, return single page with empty array"""
+    return [array[start:start+page_size] 
+            for start in range(0, max(len(array), 1), page_size)]
 
 
 def generate_posts(nposts):
@@ -455,7 +473,7 @@ def generate_posts(nposts):
             'username': {1: 'test', 2: 'other'}[post['author_id']],
         })
         posts.insert(0, post)
-    return posts
+    return sorted(posts, key=lambda post: post['created'], reverse=True)
 @pytest.mark.parametrize('nposts', range(page_size*2 + 1))
 def test_get_posts_and_get_post_image_and_get_posts_with_tag(nposts, app):
     """
@@ -480,9 +498,10 @@ def test_get_posts_and_get_post_image_and_get_posts_with_tag(nposts, app):
         'likes',
     )
     posts = generate_posts(nposts)
-    pages = [posts[start:start+page_size] for start in range(0, max(len(posts), 1), page_size)]
+    print(posts)
+    pages = paginate_array(posts, page_size)
     for pagenumber, page in enumerate(pages, 1):
-        count, actual_posts = get_posts(-1, pagenumber)
+        count, actual_posts = get_posts(page=pagenumber)
         assert count == nposts
         assert len(actual_posts) == len(page)
         for actual, expected in zip(actual_posts, page):
@@ -499,10 +518,17 @@ def test_get_posts_and_get_post_image_and_get_posts_with_tag(nposts, app):
                     get_post_image(expected['id'])
     all_tags = {tag for post in posts for tag in post['tags']}
     for tag in all_tags:
+        print(f'Tag {tag}')
         expected_posts_with_tag = [post for post in posts if tag in post['tags']]
-        actual_posts_with_tag = get_posts_with_tag(tag, -1)
-        assert len(expected_posts_with_tag) == len(actual_posts_with_tag)
-        for expected, actual in zip(expected_posts_with_tag, actual_posts_with_tag):
-            expected = {k: v for k, v in expected.items()
-                                 if k in fields_getposts}
-            assert actual == expected
+        expected_pages = paginate_array(expected_posts_with_tag, page_size)
+        for pagenumber, expected_page in enumerate(expected_pages, 1):
+            print(f'Page {pagenumber}')
+            count, actual_page = get_posts_with_tag(tag, page=pagenumber)
+            assert count == len(expected_posts_with_tag)
+            assert len(expected_page) == len(actual_page)
+            for expected, actual in zip(expected_page, actual_page):
+                expected = {k: v for k, v in expected.items()
+                                     if k in fields_getposts}
+                print(actual['id'])
+                print(expected['id'])
+                assert actual == expected
