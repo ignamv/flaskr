@@ -11,29 +11,46 @@ from .blogdb import (
     count_posts,
     page_size,
     get_post_image,
+    get_posts_with_tag,
 )
 
 # Import to register the views as a side-effect
-from . import tags
 from . import rss
+
+
+class BadPageError(KeyError):
+    pass
+
+
+def show_posts(posts, post_count, title):
+    page = int(request.args.get("page", 1))
+    npages = max(1, (post_count - 1) // page_size + 1)
+    if page < 1 or page > npages:
+        raise BadPageError(page)
+    result_number_string = build_result_number_string(page, page_size, post_count)
+    return render_template(
+        "blog/posts.html",
+        posts=posts,
+        title=title,
+        page=page,
+        npages=npages,
+        result_number_string=result_number_string,
+    )
 
 
 @bp.route("/")
 def index():
-    user_id = get_user_id()
     searchquery = request.args.get("searchquery")
     page = int(request.args.get("page", 1))
-    npages = max(1, (count_posts() - 1) // page_size + 1)
-    if page < 1 or page > npages:
-        return redirect(url_for(".index"))
-    count, posts = get_posts(user_id, page, searchquery=searchquery)
+    count, posts = get_posts(page=page, searchquery=searchquery)
     if not searchquery:
         title = "Latest posts"
     else:
         title = f'Search for "{searchquery}"'
-    return render_template(
-        "blog/posts.html", posts=posts, title=title, page=page, npages=npages
-    )
+    try:
+        return show_posts(posts, count, title)
+    except BadPageError:
+        return redirect(url_for(".index"))
 
 
 @bp.route("/create", methods=("GET", "POST"))
@@ -157,3 +174,14 @@ def build_result_number_string(page, page_size, total_posts):
     if last_post != first_post:
         return f"Showing posts {first_post}-{last_post} out of {total_posts}"
     return f"Showing post {first_post} out of {total_posts}"
+
+
+@bp.route("/tags/<string:tag>")
+def posts_with_tag(tag):
+    page = int(request.args.get("page", 1))
+    count, posts = get_posts_with_tag(tag, page=page)
+    if not posts:
+        abort(404)
+    title = f'Posts tagged with "{tag}"'
+    # TODO: redirect when page is invalid
+    return show_posts(posts, count, title)

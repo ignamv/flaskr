@@ -14,9 +14,9 @@ INSERT INTO post (title, body, author_id, created, imagebytes)
 VALUES
   ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00', X'aabbccddeeff'),
   ('test2', 'test2' || x'0a' || 'body2', 2, '2019-01-01 00:00:00', NULL),
-  ('test3', 'test3', 1, '2018-01-01 00:00:00', NULL),
-  ('test4', 'test4', 2, '2017-01-01 00:00:00', NULL),
-  ('test5', 'test5', 2, '2016-01-01 00:00:00', NULL),
+  ('test3', 'test3 word', 1, '2018-01-01 00:00:00', NULL),
+  ('test4', 'test4 word', 2, '2017-01-01 00:00:00', NULL),
+  ('test5', 'test5 word', 2, '2016-01-01 00:00:00', NULL),
   ('test6', 'test6', 2, '2015-01-01 00:00:00', NULL),
   ('test7', 'test7', 2, '2014-01-01 00:00:00', NULL);
 
