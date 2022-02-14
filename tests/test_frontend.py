@@ -1,5 +1,6 @@
 import re
 import pytest
+import attr
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -113,24 +114,25 @@ class NewOrEditPostPage(PageObject):
 
 def find_posts(webdriver):
     return [
-        Post(webdriver, elem)
+        Post.from_element(webdriver, elem)
         for elem in webdriver.find_elements(By.XPATH, '//article[@class="post"]')
     ]
 
 
+@attr.s
 class Post(object):
-    def __init__(self, webdriver, element):
-        self.webdriver = webdriver
-        self.element = element
+    title = attr.ib()
+    body = attr.ib()
+    tags = attr.ib()
+    webdriver = attr.ib(default=None, eq=False)
+    element = attr.ib(default=None, eq=False)
 
-    def get_title(self):
-        return self.element.find_element(By.CLASS_NAME, "post_title").text
-
-    def get_body(self):
-        return self.element.find_element(By.CLASS_NAME, "body").text
-
-    def get_tags(self):
-        return {elem.text for elem in self.element.find_elements(By.CLASS_NAME, "tag")}
+    @classmethod
+    def from_element(cls, webdriver, element):
+        title = element.find_element(By.CLASS_NAME, "post_title").text
+        body = element.find_element(By.CLASS_NAME, "body").text
+        tags = {elem.text for elem in element.find_elements(By.CLASS_NAME, "tag")}
+        return cls(title, body, tags, webdriver, element)
 
     def edit(self):
         self.element.find_element(By.ID, "edit").click()
@@ -172,34 +174,42 @@ class TestTour1:
 
     def create_post(self, homepage):
         newpostpage = homepage.newpost()
-        self.title, self.body = "self.title selenium", "self.body selenium"
-        self.tags = {"sele", "nium"}
+        self.post = Post(
+            title="self.title selenium",
+            body="self.body selenium",
+            tags={"sele", "nium"},
+        )
         # Try with missing title or body
-        newpostpage.submit_bad("", self.body, self.tags)
-        newpostpage.submit_bad(self.title, "", self.tags)
-        return newpostpage.submit_good(self.title, self.body, self.tags)
+        newpostpage.submit_bad("", self.post.body, self.post.tags)
+        newpostpage.submit_bad(self.post.title, "", self.post.tags)
+        return newpostpage.submit_good(self.post.title, self.post.body, self.post.tags)
 
     def check_post(self, post):
-        assert post.get_title() == self.title
-        assert post.get_body() == self.body
-        assert post.get_tags() == self.tags
+        assert post == self.post
 
     def edit_post(self, post):
         updatepage = post.edit()
-        self.title, self.body = "edited title selenuim", "edited body selenuim"
-        self.tags = {"selen", "ium"}
+        self.post = Post(
+            title="edited title selenuim",
+            body="edited body selenuim",
+            tags={"selen", "ium"},
+        )
         # Try with missing self.title or self.body
-        updatepage.submit_bad("", self.body, self.tags)
-        updatepage.submit_bad(self.title, "", self.tags)
-        return updatepage.submit_good(self.title, self.body, self.tags)
+        updatepage.submit_bad("", self.post.body, self.post.tags)
+        updatepage.submit_bad(self.post.title, "", self.post.tags)
+        return updatepage.submit_good(self.post.title, self.post.body, self.post.tags)
 
     def search(self, homepage):
         results = homepage.search("test3")
         (post,) = results.posts()
-        assert post.get_title() == "test3"
+        assert post.title == "test3"
         results = results.search("missing")
         assert not results.posts()
         return results
+
+    def browse_tags(self, homepage):
+        tagspage = homepage.browse_tags()
+        tagpage = tagspage.goto_tag("tag2")
 
     def logout(self, homepage):
         homepage = homepage.logout()
