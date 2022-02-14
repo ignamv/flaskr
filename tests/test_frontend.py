@@ -56,6 +56,7 @@ class ResultsPage(PageObject):
         self.title_regex = f'Search.*{re.escape(searchquery)}.*Flaskr$'
         super(ResultsPage, self).__init__(webdriver)
 
+    @property
     def posts(self):
         return find_posts(self.webdriver)
 
@@ -148,7 +149,8 @@ class PostPage(PageObject):
         # Post page should have exactly one post
         return len(webdriver.find_elements(By.CLASS_NAME, 'post_title')) == 1
 
-    def get_post(self):
+    @property
+    def post(self):
         return find_posts(self.webdriver)[0]
 
 
@@ -205,10 +207,10 @@ class TestTour1:
 
     def search(self, homepage):
         results = homepage.search('test3')
-        post, = results.posts()
+        post, = results.posts
         assert post.title == 'test3'
         results = results.search('missing')
-        assert not results.posts()
+        assert not results.posts
         return results
 
     def browse_tags(self, homepage):
@@ -224,10 +226,10 @@ class TestTour1:
         loginpage = self.register()
         homepage = self.login(loginpage)
         postpage = self.create_post(homepage)
-        post = postpage.get_post()
+        post = postpage.post
         self.check_post(post)
         postpage = self.edit_post(post)
-        post = postpage.get_post()
+        post = postpage.post
         self.check_post(post)
         homepage = postpage.go_home()
         results = self.search(homepage)
