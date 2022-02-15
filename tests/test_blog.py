@@ -66,8 +66,12 @@ def test_create(client, auth, app):
     with app.app_context():
         original_count = count_posts()
         assert client.get('/create').status_code == 200
-        client.post('/create', data={'title': 'created', 'body': 'abody',
-                                     'tags': '', 'file': (BytesIO(b''), '')})
+        response = client.post('/create', data={
+            'title': 'created', 'body': 'abody', 'tags': '',
+            'file': (BytesIO(b''), '')},
+            follow_redirects=True
+        ).data.decode()
+        assert 'href="/tag/' not in response
         assert count_posts() == original_count + 1
 
 

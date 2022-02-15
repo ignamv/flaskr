@@ -51,6 +51,7 @@ CREATE INDEX comment__created ON comment (created);
 CREATE TABLE tag (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL
+    CHECK (name <> "")
 );
 
 CREATE INDEX tag__name ON tag (name);

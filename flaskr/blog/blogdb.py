@@ -36,6 +36,7 @@ def get_post(id, check_author=True):
 
 
 def get_possibly_new_tag_id(tag):
+    assert tag
     db = get_db()
     try:
         return db.execute('INSERT INTO tag (name) VALUES (?)',
