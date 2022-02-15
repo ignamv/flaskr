@@ -66,6 +66,8 @@ def create():
         if not body:
             error = "Missing body"
         tags = request.form["tags"].split(",")
+        if tags == [""]:
+            tags = []
         imagebytes = request.files["file"].read() or None
         if error is None:
             post_id = create_post(g.user["id"], title, body, tags, imagebytes)

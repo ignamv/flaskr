@@ -9,7 +9,10 @@ from flaskr.blog.blogdb import (
     get_post_tags,
     get_posts_with_tag,
     get_tag_counts,
+    get_possibly_new_tag_id,
 )
+from flaskr.db import get_db
+from sqlite3 import IntegrityError
 from common import generate_no_file_selected, generate_file_tuple, generate_posts
 
 
@@ -205,3 +208,14 @@ def test_get_tag_counts(nposts, app):
     assert counts_without_tagname == sorted(counts_without_tagname, reverse=True)
     for tag, count in actual_count:
         assert count == expected_count[tag]
+
+
+def test_empty_tags_forbidden(app):
+    db = get_db()
+    with pytest.raises(IntegrityError):
+        db.execute('INSERT INTO tag (name) VALUES ("")')
+
+
+def test_get_possibly_new_tag_id_rejects_empty_tag(app):
+    with pytest.raises(AssertionError):
+        get_possibly_new_tag_id("")
