@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h2>{% block title %}Tags{% endblock %}</h2>
+{% endblock %}
+
+{% block content %}
+<ul>
+  {% for tag, count in tag_counts %}
+    <li>
+      <a href="{{ url_for('blog.posts_with_tag', tag=tag) }}" class="tag">{{tag}} ({{count}})</a>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

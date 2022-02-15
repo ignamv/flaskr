@@ -205,3 +205,17 @@ def get_posts_with_tag(tag, page):
         post["has_image"] = bool(post["has_image"])
         del post["resultcount"]
     return count, posts
+
+
+def get_tag_counts():
+    """Return list of (tag name, # of posts with this tag) pairs"""
+    return (
+        get_db()
+        .execute(
+            "SELECT tag.name, count(*) AS count"
+            " FROM tag JOIN post_tag ON tag.id == post_tag.tag_id"
+            " GROUP BY tag.name"
+            " ORDER BY count DESC"
+        )
+        .fetchall()
+    )

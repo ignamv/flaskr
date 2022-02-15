@@ -1,3 +1,5 @@
+from collections import defaultdict
+from flask import url_for
 import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
@@ -6,8 +8,9 @@ from flaskr.blog.blogdb import (
     update_post,
     get_post_tags,
     get_posts_with_tag,
+    get_tag_counts,
 )
-from common import generate_no_file_selected, generate_file_tuple
+from common import generate_no_file_selected, generate_file_tuple, generate_posts
 
 
 alltags = {"tag1", "tag2"}
@@ -175,3 +178,30 @@ def test_posts_with_tag_title(client):
         "<title>Posts tagged with &#34;tag1&#34;"
         in client.get("/tags/tag1").data.decode()
     )
+
+
+def test_tags_page_mocking_get_tag_counts(monkeypatch, client, app):
+    tag_counts = [("tagA", 23), ("tagB", 46)]
+    mock_get_tag_counts = MagicMock(return_value=tag_counts)
+    monkeypatch.setattr("flaskr.blog.get_tag_counts", mock_get_tag_counts)
+    response = client.get(url_for("blog.tags", _external=True)).data.decode()
+    mock_get_tag_counts.assert_called_once_with()
+    for tag, count in tag_counts:
+        assert f">{tag} ({count})</a>" in response
+        url = url_for("blog.posts_with_tag", tag=tag)
+        assert f'href="{url}"' in response
+
+
+@pytest.mark.parametrize("nposts", range(13))
+def test_get_tag_counts(nposts, app):
+    expected_count = defaultdict(lambda: 0)
+    posts = generate_posts(nposts)
+    for post in posts:
+        for tag in post["tags"]:
+            expected_count[tag] += 1
+    actual_count = get_tag_counts()
+    counts_without_tagname = [count for tag, count in actual_count]
+    # Should be sorted in decreasing order
+    assert counts_without_tagname == sorted(counts_without_tagname, reverse=True)
+    for tag, count in actual_count:
+        assert count == expected_count[tag]

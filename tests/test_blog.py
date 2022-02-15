@@ -17,7 +17,7 @@ from flaskr.blog.blogdb import (
     get_posts_with_tag,
 )
 from flaskr.blog import build_result_number_string
-from common import generate_no_file_selected, generate_file_tuple
+from common import generate_no_file_selected, generate_file_tuple, generate_posts
 
 
 def test_index(client, auth):
@@ -508,40 +508,6 @@ def paginate_array(array, page_size):
         array[start : start + page_size]
         for start in range(0, max(len(array), 1), page_size)
     ]
-
-
-def generate_posts(nposts):
-    db = get_db()
-    db.execute("DELETE FROM post")
-    db.commit()
-    posts = []
-    for ii in range(nposts):
-        # Only even posts have image, odd posts don't
-        has_image = ii % 2 == 0
-        post = {
-            # Alternate two posts from author 1, two from author 2
-            "author_id": (ii & 2) // 2 + 1,
-            "title": f"title{ii}",
-            "body": "\n".join(
-                [f"body{ii}"] + [f"line{line}" for line in range(ii + 1)]
-            ),
-            "imagebytes": None if not has_image else f"imagedata{ii}".encode(),
-            # Post N has tags tag1..tagN
-            "tags": [f"tag{ntag}" for ntag in range(1, ii + 1)],
-            "created": datetime(2000 + ii, 2, 3, 11, 58, 23, tzinfo=timezone.utc),
-        }
-        postid = create_post(**post)
-        post.update(
-            {
-                "id": postid,
-                "has_image": has_image,
-                "liked": False,
-                "likes": 0,
-                "username": {1: "test", 2: "other"}[post["author_id"]],
-            }
-        )
-        posts.insert(0, post)
-    return sorted(posts, key=lambda post: post["created"], reverse=True)
 
 
 @pytest.mark.parametrize("nposts", range(page_size * 2 + 1))

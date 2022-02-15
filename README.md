@@ -18,7 +18,6 @@ and going on to implement the following features:
 
 Pending features:
 
-* Page showing all tags with counts
 * Spam prevention
     - Captchas for account registration, posting, commenting
     - rel=nofollow

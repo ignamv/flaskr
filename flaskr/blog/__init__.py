@@ -12,6 +12,7 @@ from .blogdb import (
     page_size,
     get_post_image,
     get_posts_with_tag,
+    get_tag_counts,
 )
 
 # Import to register the views as a side-effect
@@ -185,3 +186,9 @@ def posts_with_tag(tag):
     title = f'Posts tagged with "{tag}"'
     # TODO: redirect when page is invalid
     return show_posts(posts, count, title)
+
+
+@bp.route("/tags/")
+def tags():
+    tag_counts = get_tag_counts()
+    return render_template("blog/tags.html", tag_counts=tag_counts)
