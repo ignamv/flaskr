@@ -263,8 +263,10 @@ class TestTour1:
     def browse_tags(self, homepage):
         tagspage = homepage.browse_tags()
         assert tagspage.tags == [
-            Tag('tag1', 2),
-            Tag('tag2', 2),
+            Tag(name='tag1', count=2),
+            Tag(name='tag2', count=2),
+            Tag(name='ium', count=1),
+            Tag(name='selen', count=1),
         ]
         tagpage = tagspage.tags[1].goto()
         assert tagpage.posts == [
