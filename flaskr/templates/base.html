@@ -23,6 +23,7 @@
                 <input type="search" id="searchbox" name="searchquery" placeholder="Search posts">
               </form>
             </li>
+            <li><a href="{{ url_for('blog.tags') }}" id="browse_tags">Browse Tags</a></li>
             {% if g.user %}
               <li><span id="username">{{ g.user['username'] }}</span></li>
               <li><a href="{{ url_for('auth.logout') }}" id="logout">Log Out</a></li>

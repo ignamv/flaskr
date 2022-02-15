@@ -50,6 +50,10 @@ class PageObject(object):
         box.send_keys(Keys.RETURN)
         return ResultsPage(self.webdriver, query)
 
+    def browse_tags(self):
+        self.webdriver.find_element(By.ID, 'browse_tags').click()
+        return TagsPage(self.webdriver)
+
 
 class ResultsPage(PageObject):
     def __init__(self, webdriver, searchquery):
@@ -59,6 +63,44 @@ class ResultsPage(PageObject):
     @property
     def posts(self):
         return find_posts(self.webdriver)
+
+
+class TagPage(PageObject):
+    def __init__(self, webdriver, tag):
+        self.title_regex = f'Posts tagged with.*{re.escape(tag)}.*Flaskr$'
+        super(TagPage, self).__init__(webdriver)
+
+    @property
+    def posts(self):
+        return find_posts(self.webdriver)
+
+
+@attr.s
+class Tag(object):
+    name = attr.ib(type=str)
+    count = attr.ib(type=int)
+    webdriver = attr.ib(default=None, eq=False)
+    element = attr.ib(default=None, eq=False)
+
+    @classmethod
+    def from_element(cls, webdriver, element):
+        name, count = re.match(r'(.*) \((\d+)\)', element.text).groups()
+        return cls(name, int(count), webdriver, element)
+
+    def goto(self):
+        self.element.click()
+        return TagPage(self.webdriver, self.name)
+
+
+class TagsPage(PageObject):
+    title_regex = 'Tags.*Flaskr$'
+
+    @property
+    def tags(self):
+        return [
+            Tag.from_element(self.webdriver, elem)
+            for elem in self.webdriver.find_elements(By.CLASS_NAME, 'tag')
+        ]
 
 
 class HomePage(PageObject):
@@ -125,7 +167,7 @@ def find_posts(webdriver):
 class Post(object):
     title = attr.ib()
     body = attr.ib()
-    tags = attr.ib()
+    tags = attr.ib(default=None)
     webdriver = attr.ib(default=None, eq=False)
     element = attr.ib(default=None, eq=False)
 
@@ -133,10 +175,15 @@ class Post(object):
     def from_element(cls, webdriver, element):
         title = element.find_element(By.CLASS_NAME, 'post_title').text
         body = element.find_element(By.CLASS_NAME, 'body').text
-        tags = {
-            elem.text
-            for elem in element.find_elements(By.CLASS_NAME, 'tag')
-        }
+        tags_containers = element.find_elements(By.CLASS_NAME, 'tags')
+        if not tags_containers:
+            tags = None
+        else:
+            tags = {
+                elem.text
+                for elem in tags_containers[0].find_elements(
+                    By.CLASS_NAME, 'tag')
+            }
         return cls(title, body, tags, webdriver, element)
 
     def edit(self):
@@ -215,7 +262,16 @@ class TestTour1:
 
     def browse_tags(self, homepage):
         tagspage = homepage.browse_tags()
-        tagpage = tagspage.goto_tag('tag2')
+        assert tagspage.tags == [
+            Tag('tag1', 2),
+            Tag('tag2', 2),
+        ]
+        tagpage = tagspage.tags[1].goto()
+        assert tagpage.posts == [
+            Post(title='test3', body='test3 word'),
+            Post(title='test4', body='test4 word'),
+        ]
+        return tagpage
 
     def logout(self, homepage):
         homepage = homepage.logout()
@@ -233,4 +289,5 @@ class TestTour1:
         self.check_post(post)
         homepage = postpage.go_home()
         results = self.search(homepage)
-        self.logout(results)
+        tagpage = self.browse_tags(results)
+        self.logout(tagpage)
