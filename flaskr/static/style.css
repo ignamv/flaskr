@@ -92,3 +92,11 @@ article>section { margin-bottom: 1em; }
 #topnavigation form { display: inline }
 #topnavigation ul { flex: 1 }
 #searchbox { width: 10em; }
+#deployment-warning {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  background-color: red;
+  color: white;
+  font-size: 2em;
+}
