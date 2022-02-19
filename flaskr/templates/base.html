@@ -40,6 +40,11 @@
           {% endfor %}
           <main>{% block content %}{% endblock %}</main>
         </section>
+        {% if debug %}
+          <aside id="deployment-warning">
+              WARNING: test deployment
+          </aside>
+        {% endif %}
     </body>
 </html>
 

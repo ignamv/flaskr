@@ -3,6 +3,7 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from io import BytesIO
+import requests
 
 from flaskr.db import get_db
 from flaskr.blog.blogdb import (
@@ -507,3 +508,17 @@ def test_get_posts_and_get_post_image_and_get_posts_with_tag(nposts, app):
                 print(actual['id'])
                 print(expected['id'])
                 assert actual == expected
+
+deployment_warning = 'WARNING: test deployment'
+
+def test_banner_warning_deployment_instance(client):
+    assert deployment_warning in client.get('/').data.decode()
+
+
+def test_banner_warning_deployment_instance_production(production_url):
+    print(production_url)
+    response = requests.get(production_url)
+    assert response.status_code == 200
+    data = response.text
+    assert deployment_warning not in data
+    assert 'Flaskr' in data

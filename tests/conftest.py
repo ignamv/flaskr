@@ -56,3 +56,17 @@ class AuthActions(object):
 @pytest.fixture
 def auth(client):
     return AuthActions(client)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        '--production-url', help='url for production server to test'
+    )
+
+
+@pytest.fixture
+def production_url(pytestconfig):
+    url = pytestconfig.getoption('--production-url')
+    if not url:
+        pytest.skip()
+    return url
