@@ -271,6 +271,7 @@ class TestTour1:
         homepage = homepage.logout()
         assert homepage.get_username() is None
 
+    @pytest.mark.slow
     def test_tour(self, browser):
         self.browser = browser
         loginpage = self.register()

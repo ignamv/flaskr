@@ -19,6 +19,7 @@ def click_recaptcha(webdriver, iframe):
     webdriver.switch_to.default_content()
 
 
+@pytest.mark.slow
 def test_recaptcha_e2e(browser):
     webdriver = browser
     webdriver.get(url_for('recaptcha.recaptcha_test', always_pass=True,
