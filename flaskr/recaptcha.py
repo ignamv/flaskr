@@ -5,6 +5,14 @@ from flask import Blueprint, request, render_template, current_app
 bp = Blueprint("recaptcha", __name__)
 
 
+def generate_recaptcha_html(sitekey):
+    return f"""
+        <script src="https://www.google.com/recaptcha/api.js" async defer>
+        </script>
+        <div class="g-recaptcha" data-sitekey="{sitekey}"></div>
+    """
+
+
 def validate_recaptcha_response(response, secretkey):
     if not response:
         # User did not click the captcha checkbox
@@ -42,12 +50,16 @@ def recaptcha_test():
         sitekey = current_app.config["RECAPTCHA_SITEKEY"]
         secretkey = current_app.config["RECAPTCHA_SECRETKEY"]
     valid = None
+    recaptcha_html = generate_recaptcha_html(sitekey)
     if request.method == "POST":
         valid = validate_recaptcha_response(
             request.form["g-recaptcha-response"], secretkey
         )
     return render_template(
-        "recaptcha.html", valid=valid, sitekey=sitekey, always_pass=always_pass
+        "recaptcha.html",
+        valid=valid,
+        recaptcha_html=recaptcha_html,
+        always_pass=always_pass,
     )
 
 
