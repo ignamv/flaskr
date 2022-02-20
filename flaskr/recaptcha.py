@@ -23,7 +23,6 @@ def validate_recaptcha_response(response, secretkey):
     )
     ret = validation["success"]
     assert isinstance(ret, bool)
-    print(f"Validated {response!r} as {ret} with {secretkey}")
     return ret
 
 
