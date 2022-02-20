@@ -76,7 +76,7 @@ def pytest_configure(config):
 def production_url(pytestconfig):
     url = pytestconfig.getoption('--production-url')
     if not url:
-        pytest.skip()
+        pytest.skip('need --production-url option to run')
     return url
 
 
