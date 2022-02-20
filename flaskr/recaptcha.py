@@ -42,7 +42,6 @@ def recaptcha_test():
     else:
         sitekey = current_app.config["RECAPTCHA_SITEKEY"]
         secretkey = current_app.config["RECAPTCHA_SECRETKEY"]
-    # TODO: pull secret keys outside of code
     valid = None
     if request.method == "POST":
         valid = validate_recaptcha_response(
