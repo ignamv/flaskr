@@ -1,20 +1,12 @@
 import re
 import pytest
 import attr
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from flask import url_for
 from werkzeug.routing import RequestRedirect, MethodNotAllowed, NotFound
-
-@pytest.fixture()
-def browser(live_server):
-    ret = webdriver.Firefox()
-    ret.get(url_for('index', _external=True))
-    yield ret
-    ret.quit()
 
 
 class PageObject(object):

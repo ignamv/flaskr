@@ -31,6 +31,8 @@ def create_app(test_config=None):
     app.register_blueprint(auth_bp)
     from .blog import bp as blog_bp
     app.register_blueprint(blog_bp)
+    from .recaptcha import bp as recaptcha_bp
+    app.register_blueprint(recaptcha_bp)
     app.add_url_rule('/', endpoint='index')
 
     return app

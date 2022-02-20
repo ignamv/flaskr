@@ -1,7 +1,8 @@
 import os
 import tempfile
-
+from selenium import webdriver
 import pytest
+from flask import url_for
 from flaskr import create_app
 from flaskr.db import get_db, init_db
 
@@ -70,6 +71,16 @@ def production_url(pytestconfig):
     if not url:
         pytest.skip()
     return url
+
+
+
+
+@pytest.fixture()
+def browser(live_server):
+    ret = webdriver.Firefox()
+    ret.get(url_for('index', _external=True))
+    yield ret
+    ret.quit()
 
 
 @pytest.fixture
