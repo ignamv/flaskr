@@ -1,7 +1,6 @@
 <html>
   <head>
     <title>reCAPTCHA demo: Simple page</title>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   </head>
   <body>
     Always pass: {{ always_pass }}
@@ -10,7 +9,7 @@
     </div>
     <form action="?" method="POST">
       <input type="hidden" name="always_pass" value="{{ always_pass }}">
-      <div class="g-recaptcha" data-sitekey="{{ sitekey }}"></div>
+      {{ recaptcha_html | safe }}
       <br/>
       <input type="submit" value="Submit">
     </form>
