@@ -70,3 +70,11 @@ def production_url(pytestconfig):
     if not url:
         pytest.skip()
     return url
+
+
+@pytest.fixture
+def temporary_working_directory(tmp_path):
+    original_working_directory = os.getcwd()
+    os.chdir(tmp_path)
+    yield tmp_path
+    os.chdir(original_working_directory)
