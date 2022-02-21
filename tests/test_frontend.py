@@ -4,9 +4,22 @@ import attr
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
 from flask import url_for
 from werkzeug.routing import RequestRedirect, MethodNotAllowed, NotFound
+
+from test_recaptcha import click_recaptcha
+
+
+def element_is_stale(element):
+    try:
+        element.is_enabled()
+    except StaleElementReferenceException:
+        return True
+    return False
 
 
 class PageObject(object):
@@ -106,17 +119,15 @@ class HomePage(PageObject):
 class RegisterPage(PageObject):
     title_regex = "Register - Flaskr$"
 
-    def register(self, username, password):
-        clear_and_send_keys(self.webdriver.find_element(By.NAME, "username"), username)
+    def register(self, username, password, recaptcha):
+        username_field = self.webdriver.find_element(By.NAME, "username")
+        clear_and_send_keys(username_field, username)
         clear_and_send_keys(self.webdriver.find_element(By.NAME, "password"), password)
+        if recaptcha:
+            click_recaptcha(self.webdriver)
         self.webdriver.find_element(By.ID, "submit_registration").click()
-
-    def register_good(self, username, password):
-        self.register(username, password)
-        return LoginPage(self.webdriver)
-
-    def register_bad(self, username, password):
-        self.register(username, password)
+        if element_is_stale(username_field):
+            return LoginPage(self.webdriver)
         return self
 
 
@@ -137,20 +148,16 @@ def clear_and_send_keys(element, keys):
 
 class NewOrEditPostPage(PageObject):
     def submit(self, title, body, tags):
-        clear_and_send_keys(self.webdriver.find_element(By.NAME, "title"), title)
+        title_field = self.webdriver.find_element(By.NAME, "title")
+        clear_and_send_keys(title_field, title)
         clear_and_send_keys(self.webdriver.find_element(By.NAME, "body"), body)
         clear_and_send_keys(
             self.webdriver.find_element(By.NAME, "tags"), ",".join(tags)
         )
         self.webdriver.find_element(By.ID, "submit_post").click()
-
-    def submit_good(self, title, body, tags):
-        self.submit(title, body, tags)
-        return PostPage(self.webdriver)
-
-    def submit_bad(self, title, body, tags):
-        self.submit(title, body, tags)
-        return self.__class__(self.webdriver)
+        if element_is_stale(title_field):
+            return PostPage(self.webdriver)
+        return self
 
 
 def find_posts(webdriver):
@@ -213,9 +220,9 @@ class TestTour1:
         # Register
         registerpage = homepage.register()
         self.user, self.password = "selenium", "seleniumpw"
-        registerpage.register_bad(self.user, "")
-        registerpage.register_bad("", self.password)
-        return registerpage.register_good(self.user, self.password)
+        registerpage.register(self.user, "", False)
+        registerpage.register("", self.password, False)
+        return registerpage.register(self.user, self.password, False)
 
     def login(self, loginpage):
         # TODO: test invalid user, incorrect password
@@ -232,9 +239,9 @@ class TestTour1:
             tags={"sele", "nium"},
         )
         # Try with missing title or body
-        newpostpage.submit_bad("", self.post.body, self.post.tags)
-        newpostpage.submit_bad(self.post.title, "", self.post.tags)
-        return newpostpage.submit_good(self.post.title, self.post.body, self.post.tags)
+        newpostpage.submit("", self.post.body, self.post.tags)
+        newpostpage.submit(self.post.title, "", self.post.tags)
+        return newpostpage.submit(self.post.title, self.post.body, self.post.tags)
 
     def check_post(self, post):
         assert post == self.post
@@ -247,9 +254,9 @@ class TestTour1:
             tags={"selen", "ium"},
         )
         # Try with missing self.title or self.body
-        updatepage.submit_bad("", self.post.body, self.post.tags)
-        updatepage.submit_bad(self.post.title, "", self.post.tags)
-        return updatepage.submit_good(self.post.title, self.post.body, self.post.tags)
+        updatepage.submit("", self.post.body, self.post.tags)
+        updatepage.submit(self.post.title, "", self.post.tags)
+        return updatepage.submit(self.post.title, self.post.body, self.post.tags)
 
     def search(self, homepage):
         results = homepage.search("test3")
