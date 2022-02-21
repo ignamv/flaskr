@@ -223,6 +223,7 @@ class TestTour1:
         return registerpage.register_good(self.user, self.password)
 
     def login(self, loginpage):
+        # TODO: test invalid user, incorrect password
         homepage = loginpage.login(self.user, self.password)
         # Should be logged in
         assert homepage.get_username() == self.user
