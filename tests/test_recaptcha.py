@@ -9,7 +9,8 @@ from flaskr.recaptcha import validate_recaptcha_response
 from flaskr import create_app
 
 
-def click_recaptcha(webdriver, iframe):
+def click_recaptcha(webdriver):
+    iframe = webdriver.find_element(By.CSS_SELECTOR, 'iframe[title="reCAPTCHA"]')
     webdriver.switch_to.frame(iframe)
 
     def find_checkboxes(webdriver):
@@ -25,8 +26,7 @@ def test_recaptcha_e2e(browser):
     webdriver = browser
     webdriver.get(url_for("recaptcha.recaptcha_test", always_pass=True, _external=True))
     assert webdriver.title == "reCAPTCHA demo: Simple page"
-    iframe = webdriver.find_element(By.CSS_SELECTOR, 'iframe[title="reCAPTCHA"]')
-    click_recaptcha(webdriver, iframe)
+    click_recaptcha(webdriver)
     sleep(0.5)
     submit = webdriver.find_element(By.XPATH, '//input[@type="submit"]')
     submit.click()
