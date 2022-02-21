@@ -107,10 +107,17 @@ class RegisterPage(PageObject):
     title_regex = "Register - Flaskr$"
 
     def register(self, username, password):
-        self.webdriver.find_element(By.NAME, "username").send_keys(username)
-        self.webdriver.find_element(By.NAME, "password").send_keys(password)
+        clear_and_send_keys(self.webdriver.find_element(By.NAME, "username"), username)
+        clear_and_send_keys(self.webdriver.find_element(By.NAME, "password"), password)
         self.webdriver.find_element(By.ID, "submit_registration").click()
+
+    def register_good(self, username, password):
+        self.register(username, password)
         return LoginPage(self.webdriver)
+
+    def register_bad(self, username, password):
+        self.register(username, password)
+        return self
 
 
 class LoginPage(PageObject):
@@ -206,7 +213,9 @@ class TestTour1:
         # Register
         registerpage = homepage.register()
         self.user, self.password = "selenium", "seleniumpw"
-        return registerpage.register(self.user, self.password)
+        registerpage.register_bad(self.user, "")
+        registerpage.register_bad("", self.password)
+        return registerpage.register_good(self.user, self.password)
 
     def login(self, loginpage):
         homepage = loginpage.login(self.user, self.password)
