@@ -65,6 +65,5 @@ def recaptcha_test():
 
 @bp.before_app_first_request
 def check_recaptcha_keys():
-    print(dict(current_app.config))
     assert "RECAPTCHA_SITEKEY" in current_app.config
     assert "RECAPTCHA_SECRETKEY" in current_app.config
