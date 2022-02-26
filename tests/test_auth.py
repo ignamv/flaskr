@@ -1,5 +1,6 @@
+from unittest.mock import MagicMock
 import pytest
-from flask import g, session
+from flask import g, session, url_for
 from flaskr.db import get_db
 from flaskr.auth_db import register_user
 
@@ -7,16 +8,32 @@ from flaskr.auth_db import register_user
 login_url = "http://localhost/auth/login"
 
 
-def test_register(client, app):
-    assert client.get("/auth/register").status_code == 200
-    response = client.post("/auth/register", data={"username": "a", "password": "pw"})
+def test_register(client, app, monkeypatch):
+    postdata = {"username": "a", "password": "pw", "g-recaptcha-response": ""}
+    register_url = url_for("auth.register", _external=True)
+
+    response = client.get(register_url)
+    assert 'src="https://www.google.com/recaptcha/api.js"' in response.data.decode()
+    assert response.status_code == 200
+
+    response = client.post(register_url, data=postdata)
+    assert response.status_code == 200
+    assert "Invalid captcha" in response.data.decode()
+
+    postdata["g-recaptcha-response"] = "123"
+    mock_validate_captcha_response = MagicMock(return_value=True)
+    monkeypatch.setattr(
+        "flaskr.auth.validate_recaptcha_response", mock_validate_captcha_response
+    )
+    response = client.post(register_url, data=postdata)
+    mock_validate_captcha_response.assert_called_once()
+    assert mock_validate_captcha_response.call_args.args[0] == "123"
     assert login_url == response.headers["Location"]
 
-    with app.app_context():
-        assert (
-            get_db().execute("SELECT * FROM user WHERE username = 'a'").fetchone()
-            is not None
-        )
+    assert (
+        get_db().execute("SELECT * FROM user WHERE username = 'a'").fetchone()
+        is not None
+    )
 
 
 @pytest.mark.parametrize(
@@ -27,9 +44,17 @@ def test_register(client, app):
         ("test", "test", "already registered"),
     ),
 )
-def test_register_validate_input(client, username, password, message):
+def test_register_validate_input(client, username, password, message, monkeypatch):
+    monkeypatch.setattr(
+        "flaskr.auth.validate_recaptcha_response", MagicMock(return_value=True)
+    )
     response = client.post(
-        "/auth/register", data={"username": username, "password": password}
+        "/auth/register",
+        data={
+            "username": username,
+            "password": password,
+            "g-recaptcha-response": "123",
+        },
     )
     assert message in response.data.decode()
 

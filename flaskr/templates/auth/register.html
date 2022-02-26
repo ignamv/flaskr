@@ -10,6 +10,7 @@
     <input name="username" id="username" required>
     <label for="password">Password</label>
     <input type="password" name="password" id="password" required>
+    {{ recaptcha | safe }}
     <input type="submit" value="Register" id="submit_registration">
   </form>
 {% endblock %}

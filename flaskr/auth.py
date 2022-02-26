@@ -10,6 +10,7 @@ from flask import (
     request,
     session,
     url_for,
+    current_app,
 )
 from flaskr.db import get_db
 from flaskr.auth_db import (
@@ -18,6 +19,7 @@ from flaskr.auth_db import (
     WrongPasswordException,
     load_user,
 )
+from .recaptcha import validate_recaptcha_response, generate_recaptcha_html
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -27,13 +29,17 @@ def register():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
+        recaptcha_response = request.form["g-recaptcha-response"]
         error = None
 
         if not username:
             error = "Username is required"
         elif not password:
             error = "Password is required"
-
+        elif not recaptcha_response or not validate_recaptcha_response(
+            recaptcha_response
+        ):
+            error = "Invalid captcha"
         if error is None:
             try:
                 register_user(username, password)
@@ -44,7 +50,8 @@ def register():
 
         flash(error)
 
-    return render_template("auth/register.html")
+    recaptcha_html = generate_recaptcha_html()
+    return render_template("auth/register.html", recaptcha=recaptcha_html)
 
 
 @bp.route("/login", methods=("GET", "POST"))

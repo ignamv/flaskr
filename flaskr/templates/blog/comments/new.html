@@ -6,7 +6,8 @@
 <form method="POST" class="flexform">
   <label for="body">Comment body</label>
   <textarea name="body" required>{{ comment.body if comment else '' }}</textarea>
-  <input type="submit" value="Post comment">
+  {{ recaptcha | safe }}
+  <input type="submit" value="Post comment" id="submit_comment">
 </form>
 {% endblock %}
 

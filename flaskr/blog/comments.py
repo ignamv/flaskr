@@ -3,6 +3,7 @@ from ..db import get_db
 from ..auth import login_required
 from .blogdb import get_post
 from .blueprint import bp
+from ..recaptcha import generate_recaptcha_html, validate_recaptcha_response
 
 
 def get_post_comments(post_id):
@@ -26,10 +27,18 @@ def new_comment(post_id):
     if db.execute("SELECT id FROM post WHERE id == ?", (post_id,)).fetchone() is None:
         abort(404)
     if request.method == "POST":
+        error = True
         body = request.form["body"]
+        recaptcha_response = request.form["g-recaptcha-response"]
         if not body:
             flash("Missing comment body")
+        elif not recaptcha_response or not validate_recaptcha_response(
+            recaptcha_response
+        ):
+            flash("Invalid captcha")
         else:
+            error = False
+        if not error:
             db.execute(
                 "INSERT INTO comment (post_id, author_id, body)" " VALUES (?, ?, ?)",
                 (post_id, g.user["id"], body),
@@ -37,7 +46,10 @@ def new_comment(post_id):
             db.commit()
             return redirect(url_for("blog.post", post_id=post_id))
     post = get_post(post_id, check_author=False)
-    return render_template("blog/comments/new.html", post=post)
+    recaptcha_html = generate_recaptcha_html()
+    return render_template(
+        "blog/comments/new.html", post=post, recaptcha=recaptcha_html
+    )
 
 
 def get_comment(post_id, comment_id):

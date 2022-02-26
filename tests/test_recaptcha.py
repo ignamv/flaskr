@@ -18,6 +18,7 @@ def click_recaptcha(webdriver):
 
     (checkbox,) = WebDriverWait(webdriver, timeout=5).until(find_checkboxes)
     checkbox.click()
+    sleep(0.5)
     webdriver.switch_to.default_content()
 
 
@@ -27,7 +28,6 @@ def test_recaptcha_e2e(browser):
     webdriver.get(url_for("recaptcha.recaptcha_test", always_pass=True, _external=True))
     assert webdriver.title == "reCAPTCHA demo: Simple page"
     click_recaptcha(webdriver)
-    sleep(0.5)
     submit = webdriver.find_element(By.XPATH, '//input[@type="submit"]')
     submit.click()
 

@@ -15,12 +15,14 @@ and going on to implement the following features:
 * RSS feed
 * Database indexes to speed up common queries
 * Database views to eliminate repeated SQL queries
+* Recaptcha for user registration, post creation, comment submission
 
 Pending features:
 
 * Spam prevention
-    - Captchas for account registration, posting, commenting
     - rel=nofollow
     - Rate limiting
 * OAuth
 * Password reminders
+* Redirect to comment anchor after submission
+* Summarize post body and show smaller image in results page

@@ -5,6 +5,7 @@ from flaskr.db import get_db
 from flaskr.blog.comments import get_post_comments
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
+from flaskr.recaptcha import recaptcha_always_passes_context
 
 from test_auth import login_url
 
@@ -124,18 +125,22 @@ def test_add_comment_nonexisting_post(client, auth):
 def test_add_comment(client, auth, post_id):
     assert client.get(f"/{post_id}/comments/new").headers["Location"] == login_url
     auth.login()
-    assert client.get(f"/{post_id}/comments/new").status_code == 200
-    print(client.post(f"/{post_id}/comments/new", data={"body": ""}).data)
-    assert (
-        "Missing comment body"
-        in client.post(f"/{post_id}/comments/new", data={"body": ""}).data.decode()
-    )
-    body = "newcomment"
-    assert (
-        client.post(f"/{post_id}/comments/new", data={"body": body}).headers["Location"]
-        == f"http://localhost/{post_id}"
-    )
-    assert body in client.get(f"/{post_id}").data.decode()
+    response = client.get(f"/{post_id}/comments/new")
+    assert response.status_code == 200
+    assert 'src="https://www.google.com/recaptcha/api.js"' in response.data.decode()
+    postdata = {"body": "", "g-recaptcha-response": "123"}
+    print(client.post(f"/{post_id}/comments/new", data=postdata).data)
+    response = client.post(f"/{post_id}/comments/new", data=postdata)
+    assert "Missing comment body" in response.data.decode()
+    postdata["body"] = "newcomment"
+    response = client.post(f"/{post_id}/comments/new", data=postdata)
+    assert "Invalid captcha" in response.data.decode()
+    with recaptcha_always_passes_context():
+        response = client.post(f"/{post_id}/comments/new", data=postdata)
+    print(response.data.decode())
+    assert response.status_code == 302
+    assert response.headers["Location"] == f"http://localhost/{post_id}"
+    assert postdata["body"] in client.get(f"/{post_id}").data.decode()
 
 
 def test_missing_comment(client, auth):

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from io import BytesIO
 import requests
+from flask import url_for
 
 from flaskr.db import get_db
 from flaskr.blog.blogdb import (
@@ -18,6 +19,7 @@ from flaskr.blog.blogdb import (
     get_posts_with_tag,
 )
 from flaskr.blog import build_result_number_string
+from flaskr.recaptcha import recaptcha_always_passes_context
 from common import generate_no_file_selected, generate_file_tuple, generate_posts
 
 
@@ -67,23 +69,40 @@ def test_exists_required(client, auth):
     assert client.post("/2000/delete").status_code == 404
 
 
-def test_create(client, auth, app):
+def test_create(client, auth, monkeypatch):
     auth.login()
-    with app.app_context():
-        original_count = count_posts()
-        assert client.get("/create").status_code == 200
-        response = client.post(
-            "/create",
-            data={
-                "title": "created",
-                "body": "abody",
-                "tags": "",
-                "file": (BytesIO(b""), ""),
-            },
-            follow_redirects=True,
-        ).data.decode()
-        assert 'href="/tag/' not in response
-        assert count_posts() == original_count + 1
+    url = url_for("blog.create")
+    original_count = count_posts()
+    response = client.get(url)
+    assert 'src="https://www.google.com/recaptcha/api.js"' in response.data.decode()
+    assert response.status_code == 200
+    postdata = {
+        "title": "created",
+        "body": "abody",
+        "tags": "",
+        "file": (BytesIO(b""), ""),
+        "g-recaptcha-response": "",
+    }
+    response = client.post(url, data=postdata)
+    assert response.status_code == 200
+    assert "Invalid captcha" in response.data.decode()
+
+    postdata = {
+        "title": "created",
+        "body": "abody",
+        "tags": "",
+        "file": (BytesIO(b""), ""),
+        "g-recaptcha-response": "123",
+    }
+    mock_validate_captcha_response = MagicMock(return_value=True)
+    monkeypatch.setattr(
+        "flaskr.blog.validate_recaptcha_response", mock_validate_captcha_response
+    )
+    response = client.post(url, data=postdata)
+    mock_validate_captcha_response.assert_called_once()
+    assert mock_validate_captcha_response.call_args.args[0] == "123"
+    assert 'href="/tag/' not in response.data.decode()
+    assert count_posts() == original_count + 1
 
 
 @pytest.mark.parametrize("has_image", [False, True])
@@ -153,11 +172,25 @@ def test_update_function_changes_image(app, client):
 def test_create_update_validate_input(auth, client, path):
     auth.login()
     response = client.post(
-        path, data={"title": "", "body": "a", "tags": "", "file": (BytesIO(b""), "")}
+        path,
+        data={
+            "title": "",
+            "body": "a",
+            "tags": "",
+            "file": (BytesIO(b""), ""),
+            "g-recaptcha-response": "123",
+        },
     )
     assert "Missing title" in response.data.decode()
     response = client.post(
-        path, data={"title": "a", "body": "", "tags": "", "file": (BytesIO(b""), "")}
+        path,
+        data={
+            "title": "a",
+            "body": "",
+            "tags": "",
+            "file": (BytesIO(b""), ""),
+            "g-recaptcha-response": "123",
+        },
     )
     assert "Missing body" in response.data.decode()
 
@@ -295,16 +328,18 @@ def test_posts_include_image(client):
 def test_create_uploading_image(client, auth):
     file_contents = b"somebytes"
     auth.login()
-    response = client.post(
-        "/create",
-        content_type="multipart/form-data",
-        data={
-            "title": "title of post with image",
-            "body": "body of post with image",
-            "tags": "file",
-            "file": (BytesIO(file_contents), "image.jpg"),
-        },
-    )
+    with recaptcha_always_passes_context():
+        response = client.post(
+            "/create",
+            content_type="multipart/form-data",
+            data={
+                "title": "title of post with image",
+                "body": "body of post with image",
+                "tags": "file",
+                "file": (BytesIO(file_contents), "image.jpg"),
+                "g-recaptcha-response": "123",
+            },
+        )
     assert response.status_code == 302
     actual_image = client.get(response.headers["Location"] + "/image.jpg").data
     assert actual_image == file_contents
@@ -318,16 +353,18 @@ def test_no_posts(client, app):
 
 def test_create_uploading_no_image(client, auth):
     auth.login()
-    response = client.post(
-        "/create",
-        content_type="multipart/form-data",
-        data={
-            "title": "title of post without image",
-            "body": "body of post without image",
-            "tags": "nofile",
-            "file": (BytesIO(b""), ""),
-        },
-    )
+    with recaptcha_always_passes_context():
+        response = client.post(
+            "/create",
+            content_type="multipart/form-data",
+            data={
+                "title": "title of post without image",
+                "body": "body of post without image",
+                "tags": "nofile",
+                "file": (BytesIO(b""), ""),
+                "g-recaptcha-response": "123",
+            },
+        )
     assert response.status_code == 302
     _, _, post_id = response.headers["Location"].rpartition("/")
     response = client.get(post_id).data.decode()
