@@ -11,7 +11,9 @@ def create_app(test_config=None):
         instance_path=os.path.join(os.getcwd(), "instance"),
     )
     app.config.from_mapping(
-        SECRET_KEY="dev", DATABASE=os.path.join(app.instance_path, "flaskr.sqlite")
+        SECRET_KEY="dev",
+        DATABASE=os.path.join(app.instance_path, "flaskr.sqlite"),
+        MAX_CONTENT_LENGTH=2 * 1024 * 1024,
     )
     app.jinja_env.globals["debug"] = app.debug
 

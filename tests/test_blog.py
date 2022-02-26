@@ -326,19 +326,31 @@ def test_posts_include_image(client):
 
 
 def test_create_uploading_image(client, auth):
-    file_contents = b"somebytes"
     auth.login()
+    # First try with a file that is too large
+    file_contents = b"A" * 4 * 1024 * 1024
+    postdata = {
+        "title": "title of post with image",
+        "body": "body of post with image",
+        "tags": "file",
+        "file": (BytesIO(file_contents), "image.jpg"),
+        "g-recaptcha-response": "123",
+    }
     with recaptcha_always_passes_context():
         response = client.post(
             "/create",
             content_type="multipart/form-data",
-            data={
-                "title": "title of post with image",
-                "body": "body of post with image",
-                "tags": "file",
-                "file": (BytesIO(file_contents), "image.jpg"),
-                "g-recaptcha-response": "123",
-            },
+            data=postdata,
+        )
+    assert response.status_code == 413  # Element too large
+    # Now with a reasonable-sized file
+    file_contents = b"A" * 200 * 1024
+    postdata["file"] = BytesIO(file_contents), "image.jpg"
+    with recaptcha_always_passes_context():
+        response = client.post(
+            "/create",
+            content_type="multipart/form-data",
+            data=postdata,
         )
     assert response.status_code == 302
     actual_image = client.get(response.headers["Location"] + "/image.jpg").data
