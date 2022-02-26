@@ -9,7 +9,7 @@
       </div>
     </div>
     {% if g.user['id'] == post['author_id'] %}
-      <a class="action" href="{{ url_for('blog.update', post_id=post['id']) }}" id="edit">Edit</a>
+      <a class="action edit_post" href="{{ url_for('blog.update', post_id=post['id']) }}">Edit</a>
     {% endif %}
   </header>
   {% if post['has_image'] %}<img src="{{ url_for('blog.post_image', post_id=post['id']) }}">{% endif %}

@@ -20,6 +20,7 @@
       <textarea name="body" id="body" required>{{ request.form.body or (post and post.body) }}</textarea>
     <label for="tags">Tags (separated by commas)</label>
     <input name="tags" id="tags" value="{{ request.form.tags or (post and ','.join(post.tags)) }}">
+    {{ recaptcha | safe }}
     <input type="submit" id="submit_post" value="{{ 'Create Entry' if not post else 'Update' }}">
   </form>
   {% if post %}

@@ -11,7 +11,7 @@
         {% if g.user and g.user.id == comment.author_id %}
           <a 
             href="{{ url_for('blog.update_comment', post_id=post.id, comment_id=comment.id) }}"
-            class="hovershow"
+            class="hovershow edit_comment"
           >
             Update
           </a>

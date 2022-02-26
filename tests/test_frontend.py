@@ -1,6 +1,7 @@
 import re
 import pytest
 import attr
+from time import sleep
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,6 +9,7 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 from flask import url_for
 from werkzeug.routing import RequestRedirect, MethodNotAllowed, NotFound
 
+from flaskr.recaptcha import recaptcha_always_passes_context
 from test_recaptcha import click_recaptcha
 
 
@@ -23,6 +25,16 @@ class PageObject(object):
     def __init__(self, webdriver):
         WebDriverWait(webdriver, timeout=2).until(self.in_correct_page)
         self.webdriver = webdriver
+
+    def refresh(self):
+        self.webdriver.get(self.webdriver.current_url)
+
+    @property
+    def errors(self):
+        return [elem.text 
+                for elem in self.webdriver.find_elements(
+                    By.CLASS_NAME, 'flash')
+                ]
 
     def in_correct_page(self, webdriver):
         match = re.match(self.title_regex, webdriver.title)
@@ -124,7 +136,7 @@ class RegisterPage(PageObject):
         if recaptcha:
             click_recaptcha(self.webdriver)
         self.webdriver.find_element(By.ID, 'submit_registration').click()
-        if element_is_stale(username_field):
+        if element_is_stale(username_field) and not self.in_correct_page(self.webdriver):
             return LoginPage(self.webdriver)
         return self
 
@@ -146,17 +158,40 @@ def clear_and_send_keys(element, keys):
 
 class NewOrEditPostPage(PageObject):
 
-    def submit(self, title, body, tags):
+    def submit(self, title, body, tags, recaptcha=False):
         title_field = self.webdriver.find_element(By.NAME, 'title')
         clear_and_send_keys(title_field, title)
         clear_and_send_keys(self.webdriver.find_element(By.NAME, 'body'),
                             body)
         clear_and_send_keys(self.webdriver.find_element(By.NAME, 'tags'),
                             ','.join(tags))
+        if recaptcha:
+            click_recaptcha(self.webdriver)
         self.webdriver.find_element(By.ID, 'submit_post').click()
-        if element_is_stale(title_field):
+        if element_is_stale(title_field) and not self.in_correct_page(self.webdriver):
             return PostPage(self.webdriver)
         return self
+
+
+class NewOrEditCommentPage(PageObject):
+    def submit(self, body, recaptcha=False):
+        body_field = self.webdriver.find_element(By.NAME, 'body')
+        clear_and_send_keys(body_field, body)
+        if recaptcha:
+            click_recaptcha(self.webdriver)
+        self.webdriver.find_element(By.ID, 'submit_comment').click()
+        if element_is_stale(body_field) and not self.in_correct_page(self.webdriver):
+            return PostPage(self.webdriver)
+        return self
+
+
+class NewCommentPage(NewOrEditCommentPage):
+    title_regex = 'New comment on .* - Flaskr'
+
+
+class UpdateCommentPage(NewOrEditCommentPage):
+    title_regex = 'Update comment on .* - Flaskr'
+
 
 def find_posts(webdriver):
     return [
@@ -190,8 +225,24 @@ class Post(object):
         return cls(title, body, tags, webdriver, element)
 
     def edit(self):
-        self.element.find_element(By.ID, 'edit').click()
+        self.element.find_element(By.CLASS_NAME, 'edit_post').click()
         return UpdatePostPage(self.webdriver)
+
+
+@attr.s
+class Comment(object):
+    body = attr.ib()
+    webdriver = attr.ib(default=None, eq=False)
+    element = attr.ib(default=None, eq=False)
+
+    @classmethod
+    def from_element(cls, webdriver, element):
+        body = element.find_element(By.CLASS_NAME, 'body').text
+        return cls(body, webdriver, element)
+
+    def edit(self):
+        self.element.find_element(By.CLASS_NAME, 'edit_comment').click()
+        return UpdateCommentPage(self.webdriver)
 
 
 class PostPage(PageObject):
@@ -202,6 +253,15 @@ class PostPage(PageObject):
     @property
     def post(self):
         return find_posts(self.webdriver)[0]
+
+    @property
+    def comments(self):
+        return [Comment.from_element(self.webdriver, elem)
+                for elem in self.webdriver.find_elements(By.CLASS_NAME, 'comment')]
+
+    def new_comment(self):
+        self.webdriver.find_element(By.ID, 'new_comment').click()
+        return NewCommentPage(self.webdriver)
 
 
 class NewPostPage(NewOrEditPostPage):
@@ -222,7 +282,16 @@ class TestTour1:
         self.user, self.password = 'selenium', 'seleniumpw'
         registerpage.register(self.user, '', False)
         registerpage.register('', self.password, False)
-        return registerpage.register(self.user, self.password, False)
+        registerpage.register(self.user, self.password, False)
+        assert registerpage.errors == ['Invalid captcha']
+        with recaptcha_always_passes_context():
+            self.live_server.stop()
+            self.live_server.start()
+            sleep(0.1)
+            registerpage.refresh()
+            ret = registerpage.register(self.user, self.password, True)
+        assert isinstance(ret, LoginPage)
+        return ret
 
     def login(self, loginpage):
         # TODO: test invalid user, incorrect password
@@ -239,9 +308,11 @@ class TestTour1:
             tags={'sele', 'nium'}
         )
         # Try with missing title or body
-        newpostpage.submit('', self.post.body, self.post.tags)
-        newpostpage.submit(self.post.title, '', self.post.tags)
-        return newpostpage.submit(self.post.title, self.post.body, self.post.tags)
+        newpostpage.submit('', self.post.body, self.post.tags, False)
+        newpostpage.submit(self.post.title, '', self.post.tags, False)
+        newpostpage.submit(self.post.title, self.post.body, self.post.tags, False)
+        assert 'Invalid captcha' in newpostpage.errors
+        return newpostpage.submit(self.post.title, self.post.body, self.post.tags, True)
 
     def check_post(self, post):
         assert post == self.post
@@ -257,6 +328,18 @@ class TestTour1:
         updatepage.submit('', self.post.body, self.post.tags)
         updatepage.submit(self.post.title, '', self.post.tags)
         return updatepage.submit(self.post.title, self.post.body, self.post.tags)
+
+    def create_comment(self, postpage):
+        createpage = postpage.new_comment()
+        # Missing body
+        createpage.submit('')
+        self.comment = Comment(body='Nice input!')
+        # No captcha
+        assert createpage.submit(self.comment.body) == createpage
+        return createpage.submit(self.comment.body, recaptcha=True)
+
+    def check_comment(self, comment):
+        assert comment == self.comment
 
     def search(self, homepage):
         results = homepage.search('test3')
@@ -286,16 +369,21 @@ class TestTour1:
         assert homepage.get_username() is None
 
     @pytest.mark.slow
-    def test_tour(self, browser):
+    def test_tour(self, browser, live_server):
         self.browser = browser
+        self.live_server = live_server
         loginpage = self.register()
         homepage = self.login(loginpage)
         postpage = self.create_post(homepage)
+        import pdb; pdb.set_trace()
         post = postpage.post
         self.check_post(post)
         postpage = self.edit_post(post)
         post = postpage.post
         self.check_post(post)
+        postpage = self.create_comment(postpage)
+        comment, = postpage.comments
+        self.check_comment(comment)
         homepage = postpage.go_home()
         results = self.search(homepage)
         tagpage = self.browse_tags(results)

@@ -18,6 +18,7 @@ def click_recaptcha(webdriver):
                                        'recaptcha-checkbox-border')
     checkbox, = WebDriverWait(webdriver, timeout=5).until(find_checkboxes)
     checkbox.click()
+    sleep(0.5)
     webdriver.switch_to.default_content()
 
 
@@ -28,7 +29,6 @@ def test_recaptcha_e2e(browser):
                           _external=True))
     assert webdriver.title == 'reCAPTCHA demo: Simple page'
     click_recaptcha(webdriver)
-    sleep(0.5)
     submit = webdriver.find_element(By.XPATH, '//input[@type="submit"]')
     submit.click()
     def valid_text(webdriver):

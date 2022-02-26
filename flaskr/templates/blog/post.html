@@ -27,7 +27,7 @@
       {% for comment in comments %}
         {% include 'blog/comments/inner_comment.html' %}
       {% endfor %}
-      <a href="{{ url_for('blog.new_comment', post_id=post.id) }}">New comment</a>
+      <a href="{{ url_for('blog.new_comment', post_id=post.id) }}" id="new_comment">New comment</a>
     </section>
   </article>
 {% endblock %}

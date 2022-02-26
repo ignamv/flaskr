@@ -7,6 +7,7 @@ from flaskr.blog.blogdb import (
     remove_post_tag, update_post, get_post_tags, get_posts_with_tag,
     get_tag_counts, get_possibly_new_tag_id)
 from flaskr.db import get_db
+from flaskr.recaptcha import recaptcha_always_passes_context
 from sqlite3 import IntegrityError
 from common import generate_no_file_selected, generate_file_tuple, generate_posts
 
@@ -128,8 +129,10 @@ def test_remove_tag(app):
 def test_create_with_tag_integration(client, auth, app):
     auth.login()
     data = {'title': 'created', 'body': 'abody', 'tags': 'tag1,tag2',
-            'file': generate_no_file_selected()}
-    post_url = client.post('/create', data=data).headers['Location']
+            'file': generate_no_file_selected(),
+            'g-recaptcha-response': '123'}
+    with recaptcha_always_passes_context():
+        post_url = client.post('/create', data=data).headers['Location']
     response = client.get(post_url).data.decode()
     assert data['title'] in response
     assert data['body'] in response
@@ -143,8 +146,10 @@ def test_create_with_tag_mocking_insert(client, auth, app, monkeypatch):
     auth.login()
     tags = ['tag1', 'tag2']
     data = {'title': 'created', 'body': 'abody', 'tags': ','.join(tags),
-            'file': generate_no_file_selected()}
-    client.post('/create', data=data)
+            'file': generate_no_file_selected(),
+            'g-recaptcha-response': '123'}
+    with recaptcha_always_passes_context():
+        client.post('/create', data=data)
     author_id = 1
     mock.assert_called_once()
     assert mock.call_args[0][:4] == (author_id, data['title'], data['body'],

@@ -9,6 +9,7 @@ from .blogdb import (
     get_post, create_post, update_post, get_posts,
     count_posts, page_size, get_post_image,
     get_posts_with_tag, get_tag_counts)
+from ..recaptcha import validate_recaptcha_response, generate_recaptcha_html
 # Import to register the views as a side-effect
 from . import rss
 
@@ -47,23 +48,29 @@ def index():
 @login_required
 def create():
     if request.method == 'POST':
-        error = None
         title = request.form['title']
+        body = request.form['body']
+        recaptcha_response = request.form['g-recaptcha-response']
         if not title:
             error = 'Missing title'
-        body = request.form['body']
-        if not body:
+        elif not body:
             error = 'Missing body'
+        elif not recaptcha_response or not validate_recaptcha_response(
+                recaptcha_response):
+            error = 'Invalid captcha'
+        else:
+            error = None
         tags = request.form['tags'].split(',')
         if tags == ['']:
             tags = []
-        imagebytes = request.files['file'].read() or None
+        imagebytes = request.files['file'].read() or None # TODO: only read if captcha valid?
         if error is None:
             post_id = create_post(g.user['id'], title, body, tags, imagebytes)
             return redirect(url_for('blog.post', post_id=post_id))
         else:
             flash(error)
-    return render_template('blog/new.html')
+    recaptcha_html = generate_recaptcha_html()
+    return render_template('blog/new.html', recaptcha=recaptcha_html)
 
 
 @bp.route('/<int:post_id>')
