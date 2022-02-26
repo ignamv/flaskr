@@ -16,6 +16,7 @@ and going on to implement the following features:
 * Database indexes to speed up common queries
 * Database views to eliminate repeated SQL queries
 * Recaptcha for user registration, post creation, comment submission
+* Redirect to comment anchor after submission
 
 Pending features:
 
@@ -24,5 +25,5 @@ Pending features:
     - Rate limiting
 * OAuth
 * Password reminders
-* Redirect to comment anchor after submission
 * Summarize post body and show smaller image in results page
+* Like post without refreshing page

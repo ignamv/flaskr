@@ -139,8 +139,13 @@ def test_add_comment(client, auth, post_id):
         response = client.post(f"/{post_id}/comments/new", data=postdata)
     print(response.data.decode())
     assert response.status_code == 302
-    assert response.headers["Location"] == f"http://localhost/{post_id}"
-    assert postdata["body"] in client.get(f"/{post_id}").data.decode()
+    assert response.headers["Location"].startswith(
+        f"http://localhost/{post_id}#comment"
+    )
+    comment_id = response.headers["Location"].partition("#")[2]
+    response = client.get(f"/{post_id}").data.decode()
+    assert postdata["body"] in response
+    assert f'id="{comment_id}"' in response
 
 
 def test_missing_comment(client, auth):

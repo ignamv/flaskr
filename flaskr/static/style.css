@@ -83,6 +83,7 @@ body>nav ul li { display: inline; }
 p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
 .likes { margin: 0.8em 0; }
 .comment { display: flex; background-color: #f9faff; margin: 0.8em 0.2em; padding: 0.8em}
+.comment:target { background-color: #f5f0ff; }
 .comment>header { width: 8em; display: flex; flex-direction: column; flex-shrink: 0}
 .comment>header>.username { margin-bottom: 1em; }
 .comment>header>* { margin-bottom: 0.2em; text-align: right }

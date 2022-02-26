@@ -39,12 +39,14 @@ def new_comment(post_id):
         else:
             error = False
         if not error:
-            db.execute(
+            comment_id = db.execute(
                 "INSERT INTO comment (post_id, author_id, body)" " VALUES (?, ?, ?)",
                 (post_id, g.user["id"], body),
-            )
+            ).lastrowid
             db.commit()
-            return redirect(url_for("blog.post", post_id=post_id))
+            return redirect(
+                url_for("blog.post", post_id=post_id, _anchor=f"comment{comment_id}")
+            )
     post = get_post(post_id, check_author=False)
     recaptcha_html = generate_recaptcha_html()
     return render_template(
