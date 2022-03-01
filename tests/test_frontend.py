@@ -377,9 +377,6 @@ class TestTour1:
         loginpage = self.register()
         homepage = self.login(loginpage)
         postpage = self.create_post(homepage)
-        import pdb
-
-        pdb.set_trace()
         post = postpage.post
         self.check_post(post)
         postpage = self.edit_post(post)
@@ -388,7 +385,6 @@ class TestTour1:
         postpage = self.create_comment(postpage)
         (comment,) = postpage.comments
         self.check_comment(comment)
-        homepage = postpage.go_home()
-        results = self.search(homepage)
+        results = self.search(postpage)
         tagpage = self.browse_tags(results)
         self.logout(tagpage)

@@ -14,6 +14,7 @@ def create_app(test_config=None):
         SECRET_KEY="dev",
         DATABASE=os.path.join(app.instance_path, "flaskr.sqlite"),
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,
+        REGISTRATION_RATE_LIMIT_SECONDS=1800,
     )
     app.jinja_env.globals["debug"] = app.debug
 

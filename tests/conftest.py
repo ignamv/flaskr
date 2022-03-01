@@ -5,6 +5,8 @@ import pytest
 from flask import url_for
 from flaskr import create_app
 from flaskr.db import get_db, init_db
+from flaskr.recaptcha import recaptcha_always_passes_context
+
 
 with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as fd:
     _data_sql = fd.read().decode("utf8")
@@ -100,3 +102,9 @@ def temporary_working_directory(tmp_path):
     os.chdir(tmp_path)
     yield tmp_path
     os.chdir(original_working_directory)
+
+
+@pytest.fixture
+def recaptcha_always_passes():
+    with recaptcha_always_passes_context():
+        yield

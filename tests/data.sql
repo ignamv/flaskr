@@ -4,11 +4,11 @@
 -- >>> generate_password_hash('pw2')
 -- 'pbkdf2:sha256:260000$zo4Su1dUaG23vfVr$fc34ea59029c6b1b7e19a48b86aceb862460529ab8c2fde586735261a1028640'
 
-INSERT INTO user (username, password)
+INSERT INTO user (username, password, registration_ip, registration_time)
 VALUES
-    ('test', 'pbkdf2:sha256:50000$TCI4GzcX$0de171a4f4dac32e3364c7ddc7c14f3e2fa61f2d17574483f7ffbb431b4acb2f'),
-    ('other', 'pbkdf2:sha256:260000$zo4Su1dUaG23vfVr$fc34ea59029c6b1b7e19a48b86aceb862460529ab8c2fde586735261a1028640'),
-    ('u3', 'pbkdf2:sha256:260000$zo4Su1dUaG23vfVr$fc34ea59029c6b1b7e19a48b86aceb862460529ab8c2fde586735261a1028640');
+    ('test', 'pbkdf2:sha256:50000$TCI4GzcX$0de171a4f4dac32e3364c7ddc7c14f3e2fa61f2d17574483f7ffbb431b4acb2f', '10.0.0.1', '2021-01-01 00:00:00'),
+    ('other', 'pbkdf2:sha256:260000$zo4Su1dUaG23vfVr$fc34ea59029c6b1b7e19a48b86aceb862460529ab8c2fde586735261a1028640', '10.0.0.1', '2021-01-01 00:00:00'),
+    ('u3', 'pbkdf2:sha256:260000$zo4Su1dUaG23vfVr$fc34ea59029c6b1b7e19a48b86aceb862460529ab8c2fde586735261a1028640', '10.0.0.1', '2021-01-01 00:00:00');
 
 INSERT INTO post (title, body, author_id, created, imagebytes)
 VALUES

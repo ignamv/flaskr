@@ -1,4 +1,5 @@
 import functools
+from datetime import datetime, timezone
 from sqlite3 import IntegrityError
 
 from flask import (
@@ -18,10 +19,19 @@ from flaskr.auth_db import (
     check_login_credentials,
     WrongPasswordException,
     load_user,
+    get_last_registration_date_for_ip,
 )
 from .recaptcha import validate_recaptcha_response, generate_recaptcha_html
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
+
+
+def does_ip_exceed_registration_rate_limit(ip):
+    last_registration_date = get_last_registration_date_for_ip(ip)
+    if last_registration_date is None:
+        return False
+    elapsed = (datetime.now(timezone.utc) - last_registration_date).total_seconds()
+    return elapsed < current_app.config["REGISTRATION_RATE_LIMIT_SECONDS"]
 
 
 @bp.route("/register", methods=("GET", "POST"))
@@ -36,13 +46,15 @@ def register():
             error = "Username is required"
         elif not password:
             error = "Password is required"
+        elif does_ip_exceed_registration_rate_limit(request.remote_addr):
+            error = "You must wait a little before registering more users from this computer"
         elif not recaptcha_response or not validate_recaptcha_response(
             recaptcha_response
         ):
             error = "Invalid captcha"
         if error is None:
             try:
-                register_user(username, password)
+                register_user(username, password, request.remote_addr, datetime.now())
             except IntegrityError:
                 error = f"User {username} is already registered"
             else:

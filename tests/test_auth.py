@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import MagicMock
 import pytest
 from flask import g, session, url_for
@@ -91,8 +92,10 @@ def test_logout(client, auth):
 
 def test_password_hash_unique(app):
     """Ensure password hash is salted with a unique salt"""
-    register_user("example1", "samepassword")
-    register_user("example2", "samepassword")
+    ip = "10.0.0.1"
+    time = datetime.now()
+    register_user("example1", "samepassword", ip, time)
+    register_user("example2", "samepassword", ip, time)
     hashes = {
         row[0]
         for row in get_db()

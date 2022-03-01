@@ -4,8 +4,12 @@ DROP TABLE IF EXISTS post;
 CREATE TABLE user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    registration_ip TEXT NOT NULL,
+    registration_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX user__ip__time ON user (registration_ip, registration_time);
 
 CREATE TABLE post (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
