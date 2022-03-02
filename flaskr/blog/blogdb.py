@@ -1,7 +1,7 @@
 import sqlite3
 from flask import g, abort
 
-from ..db import get_db
+from ..db import get_db, parse_timestamp_utc
 
 
 page_size = 5
@@ -219,4 +219,35 @@ def get_tag_counts():
             " ORDER BY count DESC"
         )
         .fetchall()
+    )
+
+
+def get_last_action_time_for_user(user_id, table):
+    ret = (
+        get_db()
+        .execute(f"SELECT max(created) FROM {table} WHERE author_id == ?", (user_id,))
+        .fetchone()[0]
+    )
+    if ret is None:
+        return ret
+    return parse_timestamp_utc(ret.encode())
+
+
+def get_last_post_time_for_user(user_id):
+    return get_last_action_time_for_user(user_id, "post")
+
+
+def get_last_comment_time_for_user(user_id):
+    return get_last_action_time_for_user(user_id, "comment")
+
+
+def create_comment(post_id, user_id, body, created):
+    return (
+        get_db()
+        .execute(
+            "INSERT INTO comment (post_id, author_id, body, created)"
+            " VALUES (?, ?, ?, ?)",
+            (post_id, user_id, body, created),
+        )
+        .lastrowid
     )

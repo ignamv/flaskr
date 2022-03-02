@@ -1,4 +1,15 @@
-from flask import flash, g, redirect, render_template, request, session, url_for, abort
+from datetime import datetime, timezone, timedelta
+from flask import (
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    abort,
+    current_app,
+)
 from ..db import get_db
 from ..auth import login_required, get_user_id
 from .comments import get_post_comments
@@ -13,6 +24,7 @@ from .blogdb import (
     get_post_image,
     get_posts_with_tag,
     get_tag_counts,
+    get_last_post_time_for_user,
 )
 from ..recaptcha import validate_recaptcha_response, generate_recaptcha_html
 
@@ -70,6 +82,8 @@ def create():
             recaptcha_response
         ):
             error = "Invalid captcha"
+        elif does_user_exceed_post_rate_limit(g.user["id"]):
+            error = "You must wait a little before posting again with this user"
         else:
             error = None
         tags = request.form["tags"].split(",")
@@ -204,3 +218,15 @@ def posts_with_tag(tag):
 def tags():
     tag_counts = get_tag_counts()
     return render_template("blog/tags.html", tag_counts=tag_counts)
+
+
+def does_user_exceed_post_rate_limit(user_id):
+    last_post_time = get_last_post_time_for_user(user_id)
+    if last_post_time is None:
+        return False
+    now = datetime.now(timezone.utc)
+    delay = timedelta(seconds=current_app.config["POSTING_RATE_LIMIT_SECONDS"])
+    print(
+        f"Now {now} last_post_time {last_post_time} delay {delay} exceeds {now - last_post_time <= delay}"
+    )
+    return now - last_post_time <= delay

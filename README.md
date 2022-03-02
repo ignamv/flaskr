@@ -17,13 +17,12 @@ and going on to implement the following features:
 * Database views to eliminate repeated SQL queries
 * Recaptcha for user registration, post creation, comment submission
 * Redirect to comment anchor after submission
+* Rate limiting for user registration, posting and commenting
 
 Pending features:
 
-* Spam prevention
-    - rel=nofollow
-    - Rate limiting
 * OAuth
 * Password reminders
 * Summarize post body and show smaller image in results page
 * Like post without refreshing page
+* CSRF protection

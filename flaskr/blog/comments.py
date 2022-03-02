@@ -1,7 +1,17 @@
-from flask import request, redirect, url_for, abort, flash, render_template, g
+from flask import (
+    request,
+    redirect,
+    url_for,
+    abort,
+    flash,
+    render_template,
+    g,
+    current_app,
+)
+from datetime import datetime, timezone, timedelta
 from ..db import get_db
 from ..auth import login_required
-from .blogdb import get_post
+from .blogdb import get_post, create_comment, get_last_comment_time_for_user
 from .blueprint import bp
 from ..recaptcha import generate_recaptcha_html, validate_recaptcha_response
 
@@ -36,13 +46,14 @@ def new_comment(post_id):
             recaptcha_response
         ):
             flash("Invalid captcha")
+        elif does_user_exceed_comment_rate_limit(g.user["id"]):
+            flash("You must wait a little before commenting again with this user")
         else:
             error = False
         if not error:
-            comment_id = db.execute(
-                "INSERT INTO comment (post_id, author_id, body)" " VALUES (?, ?, ?)",
-                (post_id, g.user["id"], body),
-            ).lastrowid
+            comment_id = create_comment(
+                post_id, g.user["id"], body, created=datetime.now()
+            )
             db.commit()
             return redirect(
                 url_for("blog.post", post_id=post_id, _anchor=f"comment{comment_id}")
@@ -104,3 +115,15 @@ def update_comment(post_id, comment_id):
         db.commit()
         return redirect(url_for("blog.post", post_id=post_id))
     return render_template("blog/comments/new.html", post=post, comment=comment)
+
+
+def does_user_exceed_comment_rate_limit(user_id):
+    last_comment_time = get_last_comment_time_for_user(user_id)
+    if last_comment_time is None:
+        return False
+    now = datetime.now(timezone.utc)
+    delay = timedelta(seconds=current_app.config["COMMENTING_RATE_LIMIT_SECONDS"])
+    print(
+        f"Now {now} last_comment_time {last_comment_time} delay {delay} exceeds {now - last_comment_time <= delay}"
+    )
+    return now - last_comment_time <= delay
