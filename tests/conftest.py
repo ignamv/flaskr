@@ -18,6 +18,7 @@ def app():
 
     app = create_app(
         {
+            "SECRET_KEY": "123",
             "TESTING": True,
             "DATABASE": db_path,
         }
@@ -108,3 +109,11 @@ def temporary_working_directory(tmp_path):
 def recaptcha_always_passes():
     with recaptcha_always_passes_context():
         yield
+
+
+@pytest.fixture
+def environ():
+    backup = dict(os.environ)
+    yield os.environ
+    os.environ.clear()
+    os.environ.update(backup)

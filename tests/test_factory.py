@@ -4,10 +4,6 @@ from flaskr import create_app
 
 
 def test_config(temporary_working_directory):
-    instance = temporary_working_directory.joinpath("instance")
-    instance.mkdir()
-    instance.joinpath("config.py").write_text("")
-    assert not create_app().testing
     assert create_app({"TESTING": True}).testing
 
 
@@ -16,7 +12,19 @@ def test_hello(client):
     assert response.data.decode() == "Hello world"
 
 
-def test_production_requires_config_file(temporary_working_directory):
-    # Production app requires config
-    with pytest.raises(FileNotFoundError):
+def test_production_requires_config_environ(temporary_working_directory, environ):
+    """Production app requires config in environment variables"""
+    with pytest.raises(KeyError):
         create_app()
+    envvars = {
+        "FLASKR_SECRET_KEY": "123123123",
+        "FLASKR_RECAPTCHA_SITEKEY": "sitekey",
+        "FLASKR_RECAPTCHA_SECRETKEY": "secretkey",
+        "FLASKR_DUMMY": "justkidding",
+    }
+    environ.update(envvars)
+    app = create_app()
+    assert app.config["SECRET_KEY"] == envvars["FLASKR_SECRET_KEY"]
+    assert app.config["RECAPTCHA_SITEKEY"] == envvars["FLASKR_RECAPTCHA_SITEKEY"]
+    assert app.config["RECAPTCHA_SECRETKEY"] == envvars["FLASKR_RECAPTCHA_SECRETKEY"]
+    assert app.config["DUMMY"] == envvars["FLASKR_DUMMY"]

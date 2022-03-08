@@ -11,19 +11,27 @@ def create_app(test_config=None):
         instance_path=os.path.join(os.getcwd(), "instance"),
     )
     app.config.from_mapping(
-        SECRET_KEY="dev",
         DATABASE=os.path.join(app.instance_path, "flaskr.sqlite"),
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,
         REGISTRATION_RATE_LIMIT_SECONDS=1800,
         POSTING_RATE_LIMIT_SECONDS=300,
         COMMENTING_RATE_LIMIT_SECONDS=120,
     )
-    app.jinja_env.globals["debug"] = app.debug
 
-    # Load the instance config, if it exists, when not testing
-    app.config.from_pyfile("config.py")
     if test_config is not None:
         app.config.from_mapping(test_config)
+    prefix = "FLASKR_"
+    app.config.from_mapping(
+        {
+            k.partition(prefix)[2]: v
+            for k, v in os.environ.items()
+            if k.startswith(prefix)
+        }
+    )
+
+    app.jinja_env.globals["debug"] = app.debug
+    if not app.testing and not app.config["SECRET_KEY"]:
+        raise KeyError("SECRET_KEY")
 
     os.makedirs(app.instance_path, exist_ok=True)
 

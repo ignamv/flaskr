@@ -101,11 +101,11 @@ def test_validate_recaptcha_mocking_network(monkeypatch, empty_response, success
         assert postdata["secret"] == secretkey
 
 
-def test_recaptcha_blueprint_validates_config_on_startup(temporary_working_directory):
-    instance = temporary_working_directory.joinpath("instance")
-    instance.mkdir()
-    instance.joinpath("config.py").write_text("")
-    app = create_app()
+def test_recaptcha_blueprint_validates_config_on_startup(
+    temporary_working_directory, environ
+):
+    del environ["FLASKR_RECAPTCHA_SITEKEY"]
+    app = create_app({"SECRET_KEY": "123"})
     with app.app_context():
         with pytest.raises(AssertionError):
             app.test_client().get("/hello")
