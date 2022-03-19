@@ -2,3 +2,5 @@ flask
 feedgen
 gunicorn
 requests
+markdown
+bleach

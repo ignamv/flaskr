@@ -13,5 +13,5 @@
     {% endif %}
   </header>
   {% if post['has_image'] %}<img src="{{ url_for('blog.post_image', post_id=post['id']) }}">{% endif %}
-  <p class="body">{{ post.body }}</p>
+  {{ post.body | render_sanitize_markdown }}
 

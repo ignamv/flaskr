@@ -7,6 +7,7 @@ and going on to implement the following features:
 
 * New responsive HTML+CSS layout and style from scratch
 * Paging
+* Markdown and sanitized HTML in posts
 * Uploading images with posts
 * Search function
 * "Liking" posts

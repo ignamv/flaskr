@@ -1,6 +1,17 @@
 import os
 
 from flask import Flask
+from markupsafe import Markup
+from bleach import Cleaner
+from bleach.linkifier import LinkifyFilter
+from bleach.sanitizer import ALLOWED_TAGS
+from markdown import markdown
+
+
+def render_sanitize_markdown(markdown_markup):
+    cleaner = Cleaner(tags=ALLOWED_TAGS + ["p"], filters=[LinkifyFilter])
+    html = cleaner.clean(markdown(markdown_markup))
+    return Markup(html)
 
 
 def create_app(test_config=None):
@@ -30,6 +41,7 @@ def create_app(test_config=None):
     )
 
     app.jinja_env.globals["debug"] = app.debug
+    app.jinja_env.filters["render_sanitize_markdown"] = render_sanitize_markdown
     if not app.testing and not app.config["SECRET_KEY"]:
         raise KeyError("SECRET_KEY")
 

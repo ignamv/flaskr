@@ -14,14 +14,17 @@ def test_hello(client):
 
 def test_production_requires_config_environ(temporary_working_directory, environ):
     """Production app requires config in environment variables"""
-    with pytest.raises(KeyError):
-        create_app()
     envvars = {
         "FLASKR_SECRET_KEY": "123123123",
         "FLASKR_RECAPTCHA_SITEKEY": "sitekey",
         "FLASKR_RECAPTCHA_SECRETKEY": "secretkey",
         "FLASKR_DUMMY": "justkidding",
     }
+    for k in envvars:
+        if k in environ:
+            del environ[k]
+    with pytest.raises(KeyError):
+        create_app()
     environ.update(envvars)
     app = create_app()
     assert app.config["SECRET_KEY"] == envvars["FLASKR_SECRET_KEY"]

@@ -80,7 +80,7 @@ body>nav ul { text-align: right }
 body>nav ul li { display: inline; }
 .post>header { display: flex; margin-bottom: 1em }
 .post>img { margin-bottom: 1em; max-height: 15em; align: center;}
-p.body { font-family: 'Open Sans', sans-serif; line-height: 1.4}
+.post>p { font-family: 'Open Sans', sans-serif; line-height: 1.4}
 .likes { margin: 0.8em 0; }
 .comment { display: flex; background-color: #f9faff; margin: 0.8em 0.2em; padding: 0.8em}
 .comment:target { background-color: #f5f0ff; }

@@ -17,7 +17,7 @@ VALUES
   ('test3', 'test3 word', 1, '2018-01-01 00:00:00', NULL),
   ('test4', 'test4 word', 2, '2017-01-01 00:00:00', NULL),
   ('test5', 'test5 word', 2, '2016-01-01 00:00:00', NULL),
-  ('test6', 'test6', 2, '2015-01-01 00:00:00', NULL),
+  ('test6', 'test6 <script> <a href="http://shady.com">a</a> http://linkify.com <b>good</b> *job*', 2, '2015-01-01 00:00:00', NULL),
   ('test7', 'test7', 2, '2014-01-01 00:00:00', NULL);
 
 INSERT INTO comment (body, post_id, author_id, created)

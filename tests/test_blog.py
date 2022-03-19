@@ -285,7 +285,9 @@ def test_get_posts_function_paging(app):
 def test_page_links(client, monkeypatch, page, last_page_size):
     pages = 5
     post_count = (pages - 1) * page_size + last_page_size
-    posts = [{"id": ii, "created": datetime.now()} for ii in range(page_size)]
+    posts = [
+        {"id": ii, "created": datetime.now(), "body": "."} for ii in range(page_size)
+    ]
     mock_get_posts = MagicMock(return_value=(post_count, posts))
     monkeypatch.setattr("flaskr.blog.get_posts", mock_get_posts)
     response = client.get(f"/?page={page}")
@@ -637,3 +639,15 @@ def test_banner_warning_deployment_instance_production(production_url):
     data = response.text
     assert deployment_warning not in data
     assert "Flaskr" in data
+
+
+def test_sanitization(client):
+    needle = '<p>test6 &lt;script&gt; <a href="http://shady.com" rel="nofollow">a</a> <a href="http://linkify.com" rel="nofollow">http://linkify.com</a> <b>good</b> <em>job</em></p>'
+    response = client.get(url_for("blog.post", post_id=6, _external=True))
+    html = response.data.decode()
+    print(html)
+    assert needle in html
+    response = client.get(url_for("blog.index", page=2, _external=True))
+    html = response.data.decode()
+    print(html)
+    assert needle in html

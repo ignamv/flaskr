@@ -95,7 +95,12 @@ def test_comments_rendering(app, post_id):
             "created": datetime(1922, 1, 1),
         },
     ]
-    post = {"id": post_id, "created": datetime(1234, 5, 6), "user": "theuser"}
+    post = {
+        "id": post_id,
+        "created": datetime(1234, 5, 6),
+        "user": "theuser",
+        "body": ".",
+    }
     with app.test_request_context("/"):
         g.user = {"id": 1, "username": "asdf"}
         result = render_template("blog/post.html", post=post, comments=comments)

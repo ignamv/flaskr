@@ -213,7 +213,7 @@ class Post(object):
     @classmethod
     def from_element(cls, webdriver, element):
         title = element.find_element(By.CLASS_NAME, "post_title").text
-        body = element.find_element(By.CLASS_NAME, "body").text
+        body = element.find_element(By.TAG_NAME, "p").text
         tags_containers = element.find_elements(By.CLASS_NAME, "tags")
         if not tags_containers:
             tags = None
