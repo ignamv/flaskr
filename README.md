@@ -19,11 +19,13 @@ and going on to implement the following features:
 * Recaptcha for user registration, post creation, comment submission
 * Redirect to comment anchor after submission
 * Rate limiting for user registration, posting and commenting
+* Summarize post body
 
 Pending features:
 
 * OAuth
-* Password reminders
-* Summarize post body and show smaller image in results page
+* "Forgot password" email
+* Allow changing password
+* Show times in local timezone
 * Like post without refreshing page
 * CSRF protection
