@@ -62,6 +62,9 @@ def test_get_post_returns_likes(app, post_id, expected_likes):
         (0, False, "no one so far"),
         (1, False, "1 person"),
         (9, False, "9 people"),
+        (1, True, "you"),
+        (2, True, "you and 1 other person"),
+        (4, True, "you and 3 other people"),
         (9, True, "you and 8 other people"),
     ],
 )

@@ -186,6 +186,8 @@ def build_how_many_people_like_string(likes, liked):
     """Build string reporting how many people liked a post, specifying if the user liked it"""
     if likes == 0:
         return "no one so far"
+    if likes == 1 and liked:
+        return "you"
     likes -= liked
     you_and = "you and " if liked else ""
     other = " other" if liked else ""
