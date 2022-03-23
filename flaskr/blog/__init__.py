@@ -109,7 +109,9 @@ def post(post_id):
         flash("Invalid post")
         return redirect(url_for("index"))
     likes = build_how_many_people_like_string(post["likes"], post["liked"])
-    return render_template("blog/post.html", post=post, comments=comments, likes=likes)
+    return render_template(
+        "blog/post.html", post=post, comments=comments, likes=likes, single_post=True
+    )
 
 
 @bp.route("/<int:post_id>/update", methods=("GET", "POST"))

@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, current_app
 from markupsafe import Markup
 from bleach import Cleaner
 from bleach.linkifier import LinkifyFilter
@@ -12,6 +12,13 @@ def render_sanitize_markdown(markdown_markup):
     cleaner = Cleaner(tags=ALLOWED_TAGS + ["p"], filters=[LinkifyFilter])
     html = cleaner.clean(markdown(markdown_markup))
     return Markup(html)
+
+
+def summarize(markdown, single_post):
+    max_length = current_app.config["SUMMARY_LENGTH"]
+    if len(markdown) > max_length and not single_post:
+        return markdown[:max_length] + "[...]"
+    return markdown
 
 
 def create_app(test_config=None):
@@ -27,6 +34,7 @@ def create_app(test_config=None):
         REGISTRATION_RATE_LIMIT_SECONDS=1800,
         POSTING_RATE_LIMIT_SECONDS=300,
         COMMENTING_RATE_LIMIT_SECONDS=120,
+        SUMMARY_LENGTH=300,
     )
 
     if test_config is not None:
@@ -42,6 +50,7 @@ def create_app(test_config=None):
 
     app.jinja_env.globals["debug"] = app.debug
     app.jinja_env.filters["render_sanitize_markdown"] = render_sanitize_markdown
+    app.jinja_env.filters["summarize"] = summarize
     if not app.testing and not app.config["SECRET_KEY"]:
         raise KeyError("SECRET_KEY")
 

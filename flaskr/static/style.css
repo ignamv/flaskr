@@ -101,3 +101,5 @@ article>section { margin-bottom: 1em; }
   color: white;
   font-size: 2em;
 }
+.readmore { display: inline-block; margin-top: 0.4em; }
+.flash { color: red; display: inline-block; margin: 3px; }

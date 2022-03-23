@@ -37,6 +37,7 @@ def test_index(client, auth):
         "2018-01-01",
         "test\nbody",
         'href="/1/update"',
+        'href="/1">Read more</a>',
     )
     for string in strings:
         assert string in response
@@ -651,3 +652,12 @@ def test_sanitization(client):
     html = response.data.decode()
     print(html)
     assert needle in html
+
+
+def test_posts_are_summarized(app, client):
+    """Posts are summarized in index but not in single post view"""
+    length = app.config["SUMMARY_LENGTH"] = 5
+    response = client.get(url_for("blog.index", page=1)).data.decode()
+    assert "test3[...]" in response
+    response = client.get(url_for("blog.post", post_id=3)).data.decode()
+    assert "test3 word" in response
